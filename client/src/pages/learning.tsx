@@ -254,8 +254,8 @@ export default function Learning() {
       <div className="flex flex-1">
         {/* Course Content Sidebar */}
         <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 shadow-sm overflow-hidden flex flex-col`}>
-          <div className="p-6 border-b border-gray-200 bg-white">
-            <div className="flex items-center justify-between mb-2">
+          <div className="px-6 py-6 border-b border-gray-200 bg-white">
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold text-eaccc-blue">Course Content</h2>
               <Button
                 variant="ghost"
@@ -274,10 +274,10 @@ export default function Learning() {
               <div key={section.order} className="border-b border-gray-100">
                 <button
                   onClick={() => toggleSection(section.order)}
-                  className="w-full p-4 text-left hover:bg-blue-50 flex items-center justify-between transition-colors"
+                  className="w-full px-6 py-4 text-left hover:bg-blue-50 flex items-center justify-between transition-colors"
                 >
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 mb-1">{section.title}</h3>
+                  <div className="flex-1 pr-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">{section.title}</h3>
                     <p className="text-sm text-gray-600">
                       {section.completedCount} / {section.lessons.length} lessons • {section.totalDuration}
                     </p>
@@ -298,14 +298,14 @@ export default function Learning() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`p-3 cursor-pointer border-l-4 transition-colors ${
+                          className={`px-6 py-3 cursor-pointer border-l-4 transition-colors ${
                             isActive 
                               ? 'bg-blue-50 border-eaccc-blue' 
                               : 'border-transparent hover:bg-gray-50'
                           }`}
                           onClick={() => goToLesson(lesson)}
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-4">
                             <div className="flex-shrink-0">
                               {isCompleted ? (
                                 <CheckCircle className="h-4 w-4 text-green-500" />
@@ -321,7 +321,7 @@ export default function Learning() {
                               }`}>
                                 {lesson.title}
                               </p>
-                              <div className="flex items-center justify-between mt-1">
+                              <div className="flex items-center justify-between mt-2">
                                 <span className="text-xs text-gray-500">{lesson.duration}</span>
                                 <Button
                                   variant="ghost"
@@ -368,12 +368,12 @@ export default function Learning() {
           </div>
 
           {/* Lesson Content */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 px-8 py-8">
             <div className="max-w-4xl mx-auto">
               
               {/* Video or Content Display */}
               {currentLesson.videoUrl ? (
-                <div className="bg-black rounded-lg mb-6 aspect-video">
+                <div className="bg-black rounded-lg mb-8 aspect-video shadow-lg">
                   <iframe
                     src={currentLesson.videoUrl}
                     className="w-full h-full rounded-lg"
@@ -382,13 +382,13 @@ export default function Learning() {
                   />
                 </div>
               ) : (
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle>Lesson Content</CardTitle>
+                <Card className="mb-8 shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl text-gray-900">Lesson Content</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <div className="prose max-w-none">
-                      <p className="text-gray-700 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed text-base">
                         {currentLesson.content || currentLesson.description}
                       </p>
                     </div>
@@ -398,23 +398,23 @@ export default function Learning() {
 
               {/* Lesson Description */}
               {currentLesson.description && (
-                <Card className="mb-6">
-                  <CardHeader>
-                    <CardTitle>About This Lesson</CardTitle>
+                <Card className="mb-8 shadow-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-xl text-gray-900">About This Lesson</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700">{currentLesson.description}</p>
+                  <CardContent className="pt-0">
+                    <p className="text-gray-700 leading-relaxed text-base">{currentLesson.description}</p>
                   </CardContent>
                 </Card>
               )}
 
               {/* Navigation Actions */}
-              <div className="flex items-center justify-between mt-8 p-6 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between mt-10 p-8 bg-gray-50 rounded-xl shadow-sm">
                 <Button
                   variant="outline"
                   onClick={goToPrevLesson}
                   disabled={!hasPrev}
-                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50"
+                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50 px-6 py-3"
                 >
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Previous Lesson
@@ -423,7 +423,7 @@ export default function Learning() {
                 <Button
                   onClick={() => markCompleteMutation.mutate(currentLesson.id)}
                   disabled={markCompleteMutation.isPending || currentLesson.completed}
-                  className="bg-eaccc-green hover:bg-green-600 text-white px-6"
+                  className="bg-eaccc-green hover:bg-green-600 text-white px-8 py-3 font-medium"
                 >
                   <CheckCircle className="mr-2 h-4 w-4" />
                   {currentLesson.completed ? "Completed ✓" : 
@@ -434,7 +434,7 @@ export default function Learning() {
                   variant="outline"
                   onClick={goToNextLesson}
                   disabled={!hasNext}
-                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50"
+                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50 px-6 py-3"
                 >
                   Next Lesson
                   <ChevronRight className="ml-2 h-4 w-4" />
