@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
@@ -12,6 +13,9 @@ import {
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve static assets (course images and other attachments)
+  app.use('/attached_assets', express.static('attached_assets'));
+
   // Serve course images - generated and placeholder
   const courseImages: Record<string, string> = {
     'customer-excellence-final-new.jpg': 'Customer_Excellence_Training_Photo_3be7b22a.png',
