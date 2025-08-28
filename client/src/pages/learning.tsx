@@ -216,8 +216,9 @@ export default function Learning() {
       
       {/* EACCC-style Top Progress Bar */}
       <div className="bg-gradient-to-r from-eaccc-blue to-blue-600 text-white px-4 py-4 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-6 flex-1">
+        <div className="w-full flex items-center justify-between">
+          {/* Left: Back Button */}
+          <div className="flex items-center">
             <Button
               variant="ghost"
               size="sm"
@@ -227,20 +228,22 @@ export default function Learning() {
               <ChevronLeft className="h-4 w-4 mr-2" />
               Back to Course
             </Button>
-            
-            <div className="flex-1 max-w-lg">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span className="font-semibold truncate text-blue-100">{course.title}</span>
-                <span className="text-blue-200 whitespace-nowrap font-medium">{overallProgress}% complete</span>
-              </div>
-              <Progress 
-                value={overallProgress} 
-                className="h-2 bg-blue-800/30" 
-              />
-            </div>
           </div>
           
-          <div className="flex items-center space-x-3 ml-6">
+          {/* Center: Progress */}
+          <div className="flex-1 max-w-lg mx-8">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="font-semibold truncate text-blue-100">{course.title}</span>
+              <span className="text-blue-200 whitespace-nowrap font-medium">{overallProgress}% complete</span>
+            </div>
+            <Progress 
+              value={overallProgress} 
+              className="h-2 bg-blue-800/30" 
+            />
+          </div>
+          
+          {/* Right: Utility Icons */}
+          <div className="flex items-center space-x-3">
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
               <Share className="h-4 w-4" />
             </Button>
@@ -254,7 +257,7 @@ export default function Learning() {
       <div className="flex flex-1">
         {/* Course Content Sidebar */}
         <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 shadow-sm overflow-hidden flex flex-col`}>
-          <div className="px-6 py-6 border-b border-gray-200 bg-white">
+          <div className="pl-4 pr-6 py-6 border-b border-gray-200 bg-white">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold text-eaccc-blue">Course Content</h2>
               <Button
@@ -274,7 +277,7 @@ export default function Learning() {
               <div key={section.order} className="border-b border-gray-100">
                 <button
                   onClick={() => toggleSection(section.order)}
-                  className="w-full px-6 py-4 text-left hover:bg-blue-50 flex items-center justify-between transition-colors"
+                  className="w-full pl-4 pr-6 py-4 text-left hover:bg-blue-50 flex items-center justify-between transition-colors"
                 >
                   <div className="flex-1 pr-4">
                     <h3 className="font-semibold text-gray-900 mb-2">{section.title}</h3>
@@ -298,7 +301,7 @@ export default function Learning() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`px-6 py-3 cursor-pointer border-l-4 transition-colors ${
+                          className={`pl-4 pr-6 py-3 cursor-pointer border-l-4 transition-colors ${
                             isActive 
                               ? 'bg-blue-50 border-eaccc-blue' 
                               : 'border-transparent hover:bg-gray-50'
