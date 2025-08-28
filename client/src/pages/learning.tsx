@@ -417,7 +417,7 @@ export default function Learning() {
       </div>
 
       {/* Fixed Bottom Navigation Bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-eaccc-green to-green-600 text-white shadow-lg border-t border-green-400">
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-eaccc-orange to-orange-600 text-white shadow-lg border-t border-orange-400">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Button
@@ -433,7 +433,7 @@ export default function Learning() {
             <Button
               onClick={() => markCompleteMutation.mutate(currentLesson.id)}
               disabled={markCompleteMutation.isPending || currentLesson.completed}
-              className="bg-white text-eaccc-green hover:bg-gray-100 px-8 py-3 font-semibold"
+              className="bg-white text-eaccc-orange hover:bg-gray-100 px-8 py-3 font-semibold"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               {currentLesson.completed ? "Completed ✓" : 
