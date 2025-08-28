@@ -148,7 +148,7 @@ export const orders = pgTable("orders", {
   userId: varchar("user_id").references(() => users.id),
   courseId: integer("course_id").references(() => courses.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  currency: varchar("currency", { length: 3 }).default("NGN"),
+  currency: varchar("currency", { length: 3 }).default("USD"),
   status: varchar("status", { length: 20 }).default("pending"), // pending, completed, failed, cancelled
   paystackReference: varchar("paystack_reference").unique(),
   paystackAccessCode: varchar("paystack_access_code"),

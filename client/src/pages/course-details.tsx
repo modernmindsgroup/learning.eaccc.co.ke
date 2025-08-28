@@ -400,7 +400,7 @@ export default function CourseDetails() {
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
                     <div className="text-3xl font-bold text-[#0097D7] mb-2">
-                      {course.price === "0" || course.price === "0.00" ? "FREE" : `₦${course.price}`}
+                      {course.price === "0" || course.price === "0.00" ? "FREE" : `$${course.price}`}
                     </div>
                     {(course.price === "0" || course.price === "0.00") && (
                       <p className="text-green-600 font-medium">No cost - Start learning today!</p>
@@ -446,7 +446,7 @@ export default function CourseDetails() {
                             {paymentMutation.isPending ? "Processing..." : (
                               <>
                                 <CreditCard className="mr-2 h-4 w-4" />
-                                Purchase Now - ₦{course.price}
+                                Purchase Now - ${course.price}
                               </>
                             )}
                           </Button>

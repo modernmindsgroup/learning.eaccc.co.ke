@@ -8,7 +8,7 @@ const paystackClient = paystack(process.env.PAYSTACK_SECRET_KEY);
 
 export interface PaymentData {
   email: string;
-  amount: number; // in kobo (multiply by 100 for NGN)
+  amount: number; // in cents (multiply by 100 for USD)
   currency?: string;
   reference?: string;
   callback_url?: string;
@@ -75,7 +75,7 @@ export class PaystackService {
       const response = await paystackClient.transaction.initialize({
         email: paymentData.email,
         amount: paymentData.amount,
-        currency: paymentData.currency || "NGN",
+        currency: paymentData.currency || "USD",
         reference: paymentData.reference,
         callback_url: paymentData.callback_url,
         metadata: paymentData.metadata,

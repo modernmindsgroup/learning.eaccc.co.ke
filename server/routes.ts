@@ -442,7 +442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         courseId: parseInt(courseId),
         amount: course.price,
-        currency: "NGN",
+        currency: "USD",
         status: "pending",
         paystackReference: reference,
       });
@@ -450,7 +450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize payment with Paystack
       const paymentData = {
         email: user.email,
-        amount: parseFloat(course.price) * 100, // Convert to kobo
+        amount: parseFloat(course.price) * 100, // Convert to cents
         reference,
         callback_url: `${req.protocol}://${req.get('host')}/api/payments/callback`,
         metadata: {
