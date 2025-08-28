@@ -142,12 +142,27 @@ export const blogPosts = pgTable("blog_posts", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Orders table for payment tracking
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  courseId: integer("course_id").references(() => courses.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("NGN"),
+  status: varchar("status", { length: 20 }).default("pending"), // pending, completed, failed, cancelled
+  paystackReference: varchar("paystack_reference").unique(),
+  paystackAccessCode: varchar("paystack_access_code"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   enrollments: many(enrollments),
   lessonProgress: many(lessonProgress),
   certificates: many(certificates),
   reviews: many(reviews),
+  orders: many(orders),
 }));
 
 export const instructorsRelations = relations(instructors, ({ many }) => ({
@@ -163,6 +178,18 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
   enrollments: many(enrollments),
   certificates: many(certificates),
   reviews: many(reviews),
+  orders: many(orders),
+}));
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
+  course: one(courses, {
+    fields: [orders.courseId],
+    references: [courses.id],
+  }),
 }));
 
 export const lessonsRelations = relations(lessons, ({ one, many }) => ({
@@ -223,6 +250,12 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({
   createdAt: true,
 });
 
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -240,6 +273,8 @@ export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type Order = typeof orders.$inferSelect;
 
 // Course with instructor details
 export type CourseWithInstructor = Course & {

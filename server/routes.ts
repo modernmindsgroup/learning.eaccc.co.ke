@@ -8,9 +8,11 @@ import {
   insertLessonSchema,
   insertEnrollmentSchema,
   insertReviewSchema,
-  insertInstructorSchema 
+  insertInstructorSchema,
+  insertOrderSchema 
 } from "@shared/schema";
 import { z } from "zod";
+import { paystackService } from "./paystack";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets (course images and other attachments)
@@ -405,6 +407,199 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating lesson:", error);
       res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  // Payment routes
+  app.post("/api/payments/initialize", isAuthenticated, async (req: any, res) => {
+    try {
+      const { courseId } = req.body;
+      const userId = req.user.claims.sub;
+
+      // Get course details
+      const course = await storage.getCourse(parseInt(courseId));
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if user is already enrolled
+      const existingEnrollment = await storage.getUserEnrollment(userId, parseInt(courseId));
+      if (existingEnrollment) {
+        return res.status(400).json({ message: "Already enrolled in this course" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user || !user.email) {
+        return res.status(400).json({ message: "User email is required for payment" });
+      }
+
+      // Generate reference
+      const reference = `eaccc_${Date.now()}_${courseId}_${userId}`;
+
+      // Create order record
+      const order = await storage.createOrder({
+        userId,
+        courseId: parseInt(courseId),
+        amount: course.price,
+        currency: "NGN",
+        status: "pending",
+        paystackReference: reference,
+      });
+
+      // Initialize payment with Paystack
+      const paymentData = {
+        email: user.email,
+        amount: parseFloat(course.price) * 100, // Convert to kobo
+        reference,
+        callback_url: `${req.protocol}://${req.get('host')}/api/payments/callback`,
+        metadata: {
+          courseId: courseId,
+          courseName: course.title,
+          userId: userId,
+          orderId: order.id,
+        },
+      };
+
+      const paymentResponse = await paystackService.initializePayment(paymentData);
+
+      if (paymentResponse.status) {
+        // Update order with access code
+        await storage.updateOrderStatus(order.id, "pending", paymentResponse.data.access_code);
+
+        res.json({
+          status: true,
+          data: {
+            authorization_url: paymentResponse.data.authorization_url,
+            access_code: paymentResponse.data.access_code,
+            reference: paymentResponse.data.reference,
+          },
+        });
+      } else {
+        await storage.updateOrderStatus(order.id, "failed");
+        res.status(400).json({ message: "Failed to initialize payment" });
+      }
+    } catch (error) {
+      console.error("Payment initialization error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/payments/callback", async (req, res) => {
+    try {
+      const { reference } = req.query;
+
+      if (!reference) {
+        return res.redirect("/?payment=failed");
+      }
+
+      // Verify payment
+      const verification = await paystackService.verifyPayment(reference as string);
+
+      if (verification.status && verification.data.status === "success") {
+        // Get order
+        const order = await storage.getOrderByReference(reference as string);
+        
+        if (order) {
+          // Update order status
+          await storage.updateOrderStatus(order.id, "completed", reference as string);
+
+          // Enroll user in course
+          if (order.userId && order.courseId) {
+            await storage.enrollUser({
+              userId: order.userId,
+              courseId: order.courseId,
+            });
+
+            // Redirect to course page
+            res.redirect(`/course/${order.courseId}?payment=success`);
+          } else {
+            res.redirect("/?payment=failed");
+          }
+        } else {
+          res.redirect("/?payment=failed");
+        }
+      } else {
+        res.redirect("/?payment=failed");
+      }
+    } catch (error) {
+      console.error("Payment callback error:", error);
+      res.redirect("/?payment=failed");
+    }
+  });
+
+  app.post("/api/payments/verify", isAuthenticated, async (req: any, res) => {
+    try {
+      const { reference } = req.body;
+
+      if (!reference) {
+        return res.status(400).json({ message: "Reference is required" });
+      }
+
+      const verification = await paystackService.verifyPayment(reference);
+
+      if (verification.status && verification.data.status === "success") {
+        // Get order
+        const order = await storage.getOrderByReference(reference);
+        
+        if (order) {
+          // Update order status
+          await storage.updateOrderStatus(order.id, "completed", reference);
+
+          // Enroll user in course
+          if (order.userId && order.courseId) {
+            await storage.enrollUser({
+              userId: order.userId,
+              courseId: order.courseId,
+            });
+
+            res.json({ 
+              status: true, 
+              message: "Payment verified successfully",
+              courseId: order.courseId 
+            });
+          } else {
+            res.status(400).json({ message: "Invalid order data" });
+          }
+        } else {
+          res.status(404).json({ message: "Order not found" });
+        }
+      } else {
+        res.status(400).json({ message: "Payment verification failed" });
+      }
+    } catch (error) {
+      console.error("Payment verification error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Order routes
+  app.get("/api/orders", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const orders = await storage.getUserOrders(userId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Get orders error:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  app.get("/api/orders/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      const order = await storage.getOrder(orderId);
+      
+      if (!order || order.userId !== userId) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+      
+      res.json(order);
+    } catch (error) {
+      console.error("Get order error:", error);
+      res.status(500).json({ message: "Failed to fetch order" });
     }
   });
 

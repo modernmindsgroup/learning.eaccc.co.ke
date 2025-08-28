@@ -8,6 +8,7 @@ import {
   certificates,
   reviews,
   blogPosts,
+  orders,
   type User,
   type UpsertUser,
   type Instructor,
@@ -25,6 +26,8 @@ import {
   type Review,
   type InsertReview,
   type BlogPost,
+  type Order,
+  type InsertOrder,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, ilike, count } from "drizzle-orm";
@@ -89,6 +92,13 @@ export interface IStorage {
     studentCount: number;
     courseCount: number;
   }>;
+
+  // Order operations
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrder(id: number): Promise<Order | undefined>;
+  getOrderByReference(reference: string): Promise<Order | undefined>;
+  updateOrderStatus(id: number, status: string, paystackReference?: string): Promise<void>;
+  getUserOrders(userId: string): Promise<(Order & { course: Course })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -609,6 +619,56 @@ export class DatabaseStorage implements IStorage {
       studentCount: studentCount.count,
       courseCount: courseCount.count,
     };
+  }
+
+  // Order operations
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [newOrder] = await db.insert(orders).values(order).returning();
+    return newOrder;
+  }
+
+  async getOrder(id: number): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.id, id));
+    return order;
+  }
+
+  async getOrderByReference(reference: string): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.paystackReference, reference));
+    return order;
+  }
+
+  async updateOrderStatus(id: number, status: string, paystackReference?: string): Promise<void> {
+    const updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (paystackReference) {
+      updateData.paystackReference = paystackReference;
+    }
+
+    await db.update(orders).set(updateData).where(eq(orders.id, id));
+  }
+
+  async getUserOrders(userId: string): Promise<(Order & { course: Course })[]> {
+    return await db
+      .select({
+        id: orders.id,
+        userId: orders.userId,
+        courseId: orders.courseId,
+        amount: orders.amount,
+        currency: orders.currency,
+        status: orders.status,
+        paystackReference: orders.paystackReference,
+        paystackAccessCode: orders.paystackAccessCode,
+        createdAt: orders.createdAt,
+        updatedAt: orders.updatedAt,
+        course: courses,
+      })
+      .from(orders)
+      .innerJoin(courses, eq(orders.courseId, courses.id))
+      .where(eq(orders.userId, userId))
+      .orderBy(desc(orders.createdAt));
   }
 }
 

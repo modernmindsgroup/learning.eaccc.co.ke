@@ -22,7 +22,8 @@ import {
   FileText, 
   CheckCircle, 
   Lock,
-  BookOpen 
+  BookOpen,
+  CreditCard 
 } from "lucide-react";
 import type { CourseWithProgress, Lesson, Review } from "@shared/schema";
 
@@ -31,6 +32,32 @@ export default function CourseDetails() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const courseId = parseInt(params.id!);
+
+  // Check for payment success in URL params
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment');
+    
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Payment Successful!",
+        description: "Welcome to your new course! You can now start learning.",
+        variant: "default",
+      });
+      // Clear the URL parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    } else if (paymentStatus === 'failed') {
+      toast({
+        title: "Payment Failed",
+        description: "There was an issue processing your payment. Please try again.",
+        variant: "destructive",
+      });
+      // Clear the URL parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [toast]);
 
   const { data: course, isLoading } = useQuery<CourseWithProgress>({
     queryKey: ["/api/courses", courseId],
@@ -71,6 +98,45 @@ export default function CourseDetails() {
       toast({
         title: "Enrollment Failed",
         description: "There was an error enrolling in this course.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const paymentMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/payments/initialize", {
+        courseId: courseId.toString(),
+      });
+      return response;
+    },
+    onSuccess: (data: any) => {
+      if (data.status && data.data?.authorization_url) {
+        // Redirect to Paystack payment page
+        window.location.href = data.data.authorization_url;
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: "Unable to initialize payment. Please try again.",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          redirectToLogin();
+        }, 500);
+        return;
+      }
+      toast({
+        title: "Payment Failed",
+        description: "There was an error processing your payment.",
         variant: "destructive",
       });
     },
@@ -309,7 +375,7 @@ export default function CourseDetails() {
                             </div>
                             <p className="text-gray-600">{review.comment}</p>
                             <p className="text-sm text-gray-500 mt-2">
-                              {new Date(review.createdAt).toLocaleDateString()}
+                              {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : 'Recently'}
                             </p>
                           </div>
                         </div>
@@ -333,10 +399,10 @@ export default function CourseDetails() {
               <Card className="sticky top-8">
                 <CardContent className="p-6">
                   <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-eaccc-blue mb-2">
-                      {course.isFree ? "FREE" : `$${course.price}`}
+                    <div className="text-3xl font-bold text-[#0097D7] mb-2">
+                      {course.price === "0" || course.price === "0.00" ? "FREE" : `₦${course.price}`}
                     </div>
-                    {course.isFree && (
+                    {(course.price === "0" || course.price === "0.00") && (
                       <p className="text-green-600 font-medium">No cost - Start learning today!</p>
                     )}
                   </div>
@@ -355,30 +421,57 @@ export default function CourseDetails() {
                   {/* Action Buttons */}
                   <div className="space-y-3">
                     {canEnroll && (
-                      <Button 
-                        className="w-full bg-eaccc-orange hover:bg-orange-600 text-white"
-                        onClick={() => enrollMutation.mutate()}
-                        disabled={enrollMutation.isPending}
-                      >
-                        {enrollMutation.isPending ? "Enrolling..." : course.isFree ? "Enroll Free" : "Buy Now"}
-                      </Button>
+                      <>
+                        {course.price === "0" || course.price === "0.00" ? (
+                          <Button 
+                            className="w-full bg-[#0097D7] hover:bg-[#0097D7]/90 text-white"
+                            onClick={() => enrollMutation.mutate()}
+                            disabled={enrollMutation.isPending}
+                            data-testid="button-enroll-free"
+                          >
+                            {enrollMutation.isPending ? "Enrolling..." : (
+                              <>
+                                <BookOpen className="mr-2 h-4 w-4" />
+                                Enroll Free
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          <Button 
+                            className="w-full bg-[#F7941D] hover:bg-[#F7941D]/90 text-white"
+                            onClick={() => paymentMutation.mutate()}
+                            disabled={paymentMutation.isPending}
+                            data-testid="button-purchase-course"
+                          >
+                            {paymentMutation.isPending ? "Processing..." : (
+                              <>
+                                <CreditCard className="mr-2 h-4 w-4" />
+                                Purchase Now - ₦{course.price}
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </>
                     )}
 
                     {canStartLearning && (
                       <Button 
-                        className="w-full bg-eaccc-blue hover:bg-blue-700 text-white"
-                        onClick={() => window.location.href = `/learn/${course.id}`}
+                        className="w-full bg-[#0097D7] hover:bg-[#0097D7]/90 text-white"
+                        onClick={() => window.location.href = `/learning/${course.id}`}
+                        data-testid="button-continue-learning"
                       >
-                        <BookOpen className="mr-2 h-4 w-4" />
+                        <Play className="mr-2 h-4 w-4" />
                         {course.userProgress === 0 ? "Start Learning" : "Continue Learning"}
                       </Button>
                     )}
 
                     {!isAuthenticated && (
                       <Button 
-                        className="w-full bg-eaccc-blue hover:bg-blue-700 text-white"
+                        className="w-full bg-[#0097D7] hover:bg-[#0097D7]/90 text-white"
                         onClick={() => redirectToLogin()}
+                        data-testid="button-login-to-enroll"
                       >
+                        <BookOpen className="mr-2 h-4 w-4" />
                         Login to Enroll
                       </Button>
                     )}
