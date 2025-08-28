@@ -371,7 +371,7 @@ export default function Learning() {
           </div>
 
           {/* Lesson Content */}
-          <div className="flex-1 px-8 py-8">
+          <div className="flex-1 px-8 py-8 pb-24">
             <div className="max-w-4xl mx-auto">
               
               {/* Video or Content Display */}
@@ -411,39 +411,44 @@ export default function Learning() {
                 </Card>
               )}
 
-              {/* Navigation Actions */}
-              <div className="flex items-center justify-between mt-10 p-8 bg-gray-50 rounded-xl shadow-sm">
-                <Button
-                  variant="outline"
-                  onClick={goToPrevLesson}
-                  disabled={!hasPrev}
-                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50 px-6 py-3"
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Previous Lesson
-                </Button>
-
-                <Button
-                  onClick={() => markCompleteMutation.mutate(currentLesson.id)}
-                  disabled={markCompleteMutation.isPending || currentLesson.completed}
-                  className="bg-eaccc-green hover:bg-green-600 text-white px-8 py-3 font-medium"
-                >
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  {currentLesson.completed ? "Completed ✓" : 
-                   markCompleteMutation.isPending ? "Marking Complete..." : "Mark Complete"}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={goToNextLesson}
-                  disabled={!hasNext}
-                  className="border-eaccc-blue text-eaccc-blue hover:bg-blue-50 px-6 py-3"
-                >
-                  Next Lesson
-                  <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Fixed Bottom Navigation Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-eaccc-green to-green-600 text-white shadow-lg border-t border-green-400">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              onClick={goToPrevLesson}
+              disabled={!hasPrev}
+              className="text-white hover:bg-white/10 border border-white/20 px-6 py-3"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Previous Lesson
+            </Button>
+
+            <Button
+              onClick={() => markCompleteMutation.mutate(currentLesson.id)}
+              disabled={markCompleteMutation.isPending || currentLesson.completed}
+              className="bg-white text-eaccc-green hover:bg-gray-100 px-8 py-3 font-semibold"
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              {currentLesson.completed ? "Completed ✓" : 
+               markCompleteMutation.isPending ? "Marking Complete..." : "Mark Complete"}
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={goToNextLesson}
+              disabled={!hasNext}
+              className="text-white hover:bg-white/10 border border-white/20 px-6 py-3"
+            >
+              Next Lesson
+              <ChevronRight className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
