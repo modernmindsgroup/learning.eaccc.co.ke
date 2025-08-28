@@ -464,7 +464,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const paymentResponse = await paystackService.initializePayment(paymentData);
 
-      if (paymentResponse && paymentResponse.status) {
+      console.log("Payment response status:", paymentResponse?.status);
+      console.log("Payment response status type:", typeof paymentResponse?.status);
+      console.log("Payment response data:", paymentResponse?.data);
+
+      if (paymentResponse && (paymentResponse.status === true || paymentResponse.status === "true")) {
         // Update order with access code
         await storage.updateOrderStatus(order.id, "pending", paymentResponse.data.access_code);
 
@@ -478,6 +482,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         await storage.updateOrderStatus(order.id, "failed");
+        console.log("Payment failed, response:", paymentResponse);
         res.status(400).json({ 
           message: "Failed to initialize payment",
           error: paymentResponse || "No response from payment provider"

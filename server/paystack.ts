@@ -88,8 +88,19 @@ export class PaystackService {
         metadata: paymentData.metadata,
       });
 
-      console.log("Paystack response:", response);
-      return response.body as PaymentResponse;
+      console.log("Paystack response body:", response.body);
+      console.log("Paystack response status:", response.status);
+      
+      // Handle both possible response formats
+      const responseData = response.body || response;
+      console.log("Response data type:", typeof responseData);
+      console.log("Response data:", responseData);
+      
+      if (responseData && typeof responseData === 'object') {
+        return responseData as PaymentResponse;
+      }
+      
+      throw new Error("Invalid response format from Paystack");
     } catch (error) {
       console.error("Paystack initialization error:", error);
       throw error;
