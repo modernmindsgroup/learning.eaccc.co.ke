@@ -133,18 +133,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/courses/:id", async (req, res) => {
+  app.get("/api/courses/:id", async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
       
-      // Always use the basic getCourse method for public access
+      // Get basic course information
       const course = await storage.getCourse(courseId);
       
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
       
-      res.json(course);
+      // If user is authenticated, include enrollment information
+      if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+        const userId = req.user.claims.sub;
+        const enrollment = await storage.getUserEnrollment(userId, courseId);
+        
+        // Add enrollment and progress information for authenticated users
+        const courseWithProgress = {
+          ...course,
+          enrollment: enrollment || null,
+          userProgress: enrollment?.progress || 0,
+        };
+        
+        res.json(courseWithProgress);
+      } else {
+        // For non-authenticated users, return basic course info
+        res.json(course);
+      }
     } catch (error) {
       console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
