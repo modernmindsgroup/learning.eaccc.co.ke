@@ -11,6 +11,10 @@ import Courses from "@/pages/courses";
 import CourseDetails from "@/pages/course-details";
 import Learning from "@/pages/learning";
 import Dashboard from "@/pages/dashboard";
+import Instructors from "@/pages/instructors";
+import Store from "@/pages/store";
+import Forums from "@/pages/forums";
+import Contact from "@/pages/contact";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,6 +24,10 @@ function Router() {
       {/* Public routes - accessible to everyone */}
       <Route path="/courses" component={Courses} />
       <Route path="/courses/:id" component={CourseDetails} />
+      <Route path="/instructors" component={Instructors} />
+      <Route path="/store" component={Store} />
+      <Route path="/forums" component={Forums} />
+      <Route path="/contact" component={Contact} />
       
       {/* Authentication-specific routes */}
       {isLoading || !isAuthenticated ? (
