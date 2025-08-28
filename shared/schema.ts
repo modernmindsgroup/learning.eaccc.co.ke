@@ -80,6 +80,8 @@ export const lessons = pgTable("lessons", {
   videoUrl: varchar("video_url"), // For video lessons
   duration: varchar("duration"), // e.g., "15 minutes"
   orderIndex: integer("order_index").notNull(),
+  sectionTitle: varchar("section_title", { length: 255 }).default("Introduction"),
+  sectionOrder: integer("section_order").default(1),
   isLocked: boolean("is_locked").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -102,7 +104,9 @@ export const lessonProgress = pgTable("lesson_progress", {
   lessonId: integer("lesson_id").references(() => lessons.id),
   completed: boolean("completed").default(false),
   completedAt: timestamp("completed_at"),
-});
+}, (table) => ({
+  unique: { columns: [table.userId, table.lessonId] },
+}));
 
 // Certificates table
 export const certificates = pgTable("certificates", {

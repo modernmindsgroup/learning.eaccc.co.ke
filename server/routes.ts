@@ -278,6 +278,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get lesson progress for a course
+  app.get("/api/lesson-progress/:courseId", isAuthenticated, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const userId = req.user.claims.sub;
+      
+      const progress = await storage.getUserLessonProgress(userId, courseId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching lesson progress:", error);
+      res.status(500).json({ message: "Failed to fetch lesson progress" });
+    }
+  });
+
   // Mark lesson complete
   app.post("/api/lessons/:id/complete", isAuthenticated, async (req: any, res) => {
     try {
