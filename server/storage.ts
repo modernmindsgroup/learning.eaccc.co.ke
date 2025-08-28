@@ -77,6 +77,7 @@ export interface IStorage {
   // Certificate operations
   issueCertificate(userId: string, courseId: number): Promise<Certificate>;
   getUserCertificates(userId: string): Promise<Certificate[]>;
+  getCertificate(id: number): Promise<Certificate | undefined>;
 
   // Review operations
   createReview(review: InsertReview): Promise<Review>;
@@ -539,6 +540,11 @@ export class DatabaseStorage implements IStorage {
       .from(certificates)
       .where(eq(certificates.userId, userId))
       .orderBy(desc(certificates.issuedAt));
+  }
+
+  async getCertificate(id: number): Promise<Certificate | undefined> {
+    const [certificate] = await db.select().from(certificates).where(eq(certificates.id, id));
+    return certificate;
   }
 
   // Review operations

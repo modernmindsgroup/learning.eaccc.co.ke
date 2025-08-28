@@ -72,6 +72,13 @@ export interface VerificationResponse {
 export class PaystackService {
   async initializePayment(paymentData: PaymentData): Promise<PaymentResponse> {
     try {
+      console.log("Initializing payment with data:", {
+        email: paymentData.email,
+        amount: paymentData.amount,
+        currency: paymentData.currency || "USD",
+        reference: paymentData.reference
+      });
+
       const response = await paystackClient.transaction.initialize({
         email: paymentData.email,
         amount: paymentData.amount,
@@ -81,10 +88,11 @@ export class PaystackService {
         metadata: paymentData.metadata,
       });
 
+      console.log("Paystack response:", response);
       return response.body as PaymentResponse;
     } catch (error) {
       console.error("Paystack initialization error:", error);
-      throw new Error("Failed to initialize payment");
+      throw error;
     }
   }
 

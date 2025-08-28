@@ -13,6 +13,7 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import { paystackService } from "./paystack";
+import { certificateGenerator } from "./certificates";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets (course images and other attachments)
@@ -463,7 +464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const paymentResponse = await paystackService.initializePayment(paymentData);
 
-      if (paymentResponse.status) {
+      if (paymentResponse && paymentResponse.status) {
         // Update order with access code
         await storage.updateOrderStatus(order.id, "pending", paymentResponse.data.access_code);
 
@@ -477,7 +478,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         await storage.updateOrderStatus(order.id, "failed");
-        res.status(400).json({ message: "Failed to initialize payment" });
+        res.status(400).json({ 
+          message: "Failed to initialize payment",
+          error: paymentResponse || "No response from payment provider"
+        });
       }
     } catch (error) {
       console.error("Payment initialization error:", error);
@@ -600,6 +604,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get order error:", error);
       res.status(500).json({ message: "Failed to fetch order" });
+    }
+  });
+
+  // Certificate routes
+  app.get("/api/my-certificates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const certificates = await storage.getUserCertificates(userId);
+      res.json(certificates);
+    } catch (error) {
+      console.error("Get certificates error:", error);
+      res.status(500).json({ message: "Failed to fetch certificates" });
+    }
+  });
+
+  app.get("/api/certificates/:id/download", isAuthenticated, async (req: any, res) => {
+    try {
+      const certificateId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+      
+      // Verify certificate belongs to user
+      const certificate = await storage.getCertificate(certificateId);
+      if (!certificate || certificate.userId !== userId) {
+        return res.status(404).json({ message: "Certificate not found" });
+      }
+      
+      const pdfBuffer = await certificateGenerator.generateCertificatePDF(certificateId);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="certificate-${certificateId}.pdf"`);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error("Certificate download error:", error);
+      res.status(500).json({ message: "Failed to generate certificate" });
+    }
+  });
+
+  // Dashboard routes
+  app.get("/api/my-enrollments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const enrollments = await storage.getUserEnrollments(userId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error("Get enrollments error:", error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
     }
   });
 
