@@ -1,0 +1,101 @@
+EACCC Learning MVP – Business Requirements Document
+Branding & Style
+
+Logo: Use the official EACCC logo in the top header and on certificates.
+
+Colors:
+
+Primary: #0097D7 (blue) – buttons, headings, navigation highlights.
+
+Secondary: #F7941D (orange) – accents, icons, CTAs.
+
+Accent: #34A853 (green) – progress bars, success states.
+
+Background: Light grey (#F8F9FA) with white content cards.
+
+Typography: Poppins or Inter, medium weight for headings, regular for body text.
+
+Style: Minimal, business-like, mobile-responsive, rounded buttons, soft shadows.
+
+Modules & Pages
+1. Header Navigation
+
+Left: EACCC logo.
+
+Right: Menu – Home, Courses, Instructors, Store, Forums, Contact.
+
+Include: Search bar, Login, Register buttons, Currency selector (KES).
+
+2. Home Page
+
+Hero Section: Full-width image, overlay text:
+“Empowering Africa Through Skills and Service Excellence”
+Button: “Browse Courses”.
+
+Stats Section: e.g., “2 Skillful Instructors”, “11 Happy Students”, “4 Video Courses”.
+
+Newest Courses: Horizontal scroll cards.
+
+Free Courses: Grid layout.
+
+Testimonials: Carousel with learner photo, name, title, and quote.
+
+Blog Preview: 3 recent posts with image, title, snippet, “Read more”.
+
+3. Course Listing Page
+
+Grid of course cards with: image, title, instructor, category, duration, date, price/free badge.
+
+Sidebar filters: Category, Price (Free/Paid), Discount, Certificate Included, Has Quiz, Featured.
+
+Sorting dropdown: Newest, Price Low-High, Price High-Low.
+
+4. Course Details Page
+
+Banner with course title, category, and instructor.
+
+Tabs: Overview | Curriculum | Instructor | Reviews.
+
+Curriculum list: Locked for unpaid, open for enrolled.
+
+Enroll/Purchase box with course price and “Buy Now” / “Enroll Free” button.
+
+5. Payment & Enrollment
+
+Payment options: Paystack, PesaPal.
+
+Instant course access after payment.
+
+Order history in user profile.
+
+6. Learning Environment
+
+Lesson player (video or text) on the left, lesson navigation on the right.
+
+“Mark Lesson Complete” button.
+
+Downloadable materials section.
+
+7. Learner Dashboard
+
+Welcome message & progress overview.
+
+Enrolled courses with progress bars.
+
+Certificates earned section (PDF download).
+
+Profile settings: name, email, password.
+
+8. Certificates
+
+Auto-generated PDF with: learner name, course title, completion date, EACCC logo & colors.
+
+Initial Course Content
+
+Customer Excellence Final – Onsongo James – 2:07 Hours – Free
+
+Advanced Course: Mastering Customer Experience – Samuel Onsongo – 9:20 Hours – Free
+
+Intermediate Course: Enhancing Customer Experience – Samuel Onsongo – 2:15 Hours – Free
+
+Basic Learner Course: Introduction to Customer Service (Bestseller) – Onsongo James – 2:00 Hours – Free

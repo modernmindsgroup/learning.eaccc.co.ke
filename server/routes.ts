@@ -1,0 +1,379 @@
+import type { Express } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import { 
+  insertCourseSchema, 
+  insertLessonSchema,
+  insertEnrollmentSchema,
+  insertReviewSchema,
+  insertInstructorSchema 
+} from "@shared/schema";
+import { z } from "zod";
+
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Serve course images - generated and placeholder
+  const courseImages: Record<string, string> = {
+    'customer-excellence-final-new.jpg': 'Customer_Excellence_Training_Photo_3be7b22a.png',
+    'mastering-customer-experience-new.jpg': 'Advanced_Customer_Experience_Course_0caa0cf1.png',
+    'introduction-customer-service-new.jpg': 'Basic_Customer_Service_Course_e5eb5899.png',
+    'enhancing-customer-experience-new.jpg': 'Intermediate_Customer_Experience_Course_514aa6b9.png',
+    'business-development.jpg': 'Business_Development_Training_Course_7f058f5d.png',
+    'customer-retention.jpg': 'Customer_Retention_Strategy_Course_492098ce.png'
+  };
+
+  app.get("/api/placeholder/:imageName", (req, res) => {
+    const imageName = req.params.imageName;
+    
+    // Check if we have a generated image for this course
+    if (courseImages[imageName]) {
+      const imagePath = `attached_assets/generated_images/${courseImages[imageName]}`;
+      return res.sendFile(imagePath, { root: process.cwd() });
+    }
+    
+    // Return a simple SVG placeholder with EACCC branding for other images
+    const svg = `
+      <svg width="400" height="225" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="225" fill="#F8F9FA"/>
+        <rect x="20" y="20" width="360" height="185" fill="#0097D7" rx="8"/>
+        <text x="200" y="100" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="14" font-weight="bold">EACCC Learning</text>
+        <text x="200" y="130" text-anchor="middle" fill="#F7941D" font-family="Arial, sans-serif" font-size="12">${imageName.replace(/[.-]/g, ' ').replace(/jpg|png/g, '').trim()}</text>
+      </svg>
+    `;
+    res.set('Content-Type', 'image/svg+xml');
+    res.send(svg);
+  });
+
+  // Auth middleware
+  await setupAuth(app);
+
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Public routes - Stats
+  app.get("/api/stats", async (req, res) => {
+    try {
+      const stats = await storage.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats" });
+    }
+  });
+
+  // Public routes - Courses
+  app.get("/api/courses", async (req, res) => {
+    try {
+      const {
+        category,
+        isFree,
+        hasQuiz,
+        hasCertificate,
+        isFeatured,
+        search,
+        sortBy,
+      } = req.query;
+
+      const filters = {
+        category: category as string,
+        isFree: isFree === "true" ? true : isFree === "false" ? false : undefined,
+        hasQuiz: hasQuiz === "true" ? true : hasQuiz === "false" ? false : undefined,
+        hasCertificate: hasCertificate === "true" ? true : hasCertificate === "false" ? false : undefined,
+        isFeatured: isFeatured === "true" ? true : isFeatured === "false" ? false : undefined,
+        search: search as string,
+        sortBy: sortBy as "newest" | "priceLowHigh" | "priceHighLow" | "rating",
+      };
+
+      const courses = await storage.getCourses(filters);
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  app.get("/api/courses/newest", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 6;
+      const courses = await storage.getNewestCourses(limit);
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching newest courses:", error);
+      res.status(500).json({ message: "Failed to fetch newest courses" });
+    }
+  });
+
+  app.get("/api/courses/free", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 4;
+      const courses = await storage.getFreeCourses(limit);
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching free courses:", error);
+      res.status(500).json({ message: "Failed to fetch free courses" });
+    }
+  });
+
+  app.get("/api/courses/featured", async (req, res) => {
+    try {
+      const courses = await storage.getFeaturedCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching featured courses:", error);
+      res.status(500).json({ message: "Failed to fetch featured courses" });
+    }
+  });
+
+  app.get("/api/courses/:id", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      
+      // Always use the basic getCourse method for public access
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
+  // Course lessons
+  app.get("/api/courses/:id/lessons", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const lessons = await storage.getCourseLessons(courseId);
+      res.json(lessons);
+    } catch (error) {
+      console.error("Error fetching course lessons:", error);
+      res.status(500).json({ message: "Failed to fetch course lessons" });
+    }
+  });
+
+  // Course reviews
+  app.get("/api/courses/:id/reviews", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const reviews = await storage.getCourseReviews(courseId);
+      res.json(reviews);
+    } catch (error) {
+      console.error("Error fetching course reviews:", error);
+      res.status(500).json({ message: "Failed to fetch course reviews" });
+    }
+  });
+
+  // Instructors
+  app.get("/api/instructors", async (req, res) => {
+    try {
+      const instructors = await storage.getInstructors();
+      res.json(instructors);
+    } catch (error) {
+      console.error("Error fetching instructors:", error);
+      res.status(500).json({ message: "Failed to fetch instructors" });
+    }
+  });
+
+  app.get("/api/instructors/:id", async (req, res) => {
+    try {
+      const instructorId = parseInt(req.params.id);
+      const instructor = await storage.getInstructor(instructorId);
+      
+      if (!instructor) {
+        return res.status(404).json({ message: "Instructor not found" });
+      }
+      
+      res.json(instructor);
+    } catch (error) {
+      console.error("Error fetching instructor:", error);
+      res.status(500).json({ message: "Failed to fetch instructor" });
+    }
+  });
+
+  // Blog posts
+  app.get("/api/blog", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 3;
+      const posts = await storage.getPublishedBlogPosts(limit);
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching blog posts:", error);
+      res.status(500).json({ message: "Failed to fetch blog posts" });
+    }
+  });
+
+  // Protected routes - require authentication
+  
+  // User enrollment
+  app.post("/api/courses/:id/enroll", isAuthenticated, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      // Check if user is already enrolled
+      const existingEnrollment = await storage.getUserEnrollment(userId, courseId);
+      if (existingEnrollment) {
+        return res.status(400).json({ message: "Already enrolled in this course" });
+      }
+
+      // Check if course exists
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      const enrollment = await storage.enrollUser({
+        userId,
+        courseId,
+      });
+
+      res.json(enrollment);
+    } catch (error) {
+      console.error("Error enrolling user:", error);
+      res.status(500).json({ message: "Failed to enroll in course" });
+    }
+  });
+
+  // User enrollments
+  app.get("/api/my-enrollments", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const enrollments = await storage.getUserEnrollments(userId);
+      res.json(enrollments);
+    } catch (error) {
+      console.error("Error fetching user enrollments:", error);
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+
+  // Mark lesson complete
+  app.post("/api/lessons/:id/complete", isAuthenticated, async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      await storage.markLessonComplete(userId, lessonId);
+
+      // Get lesson to find course
+      const lesson = await storage.getLesson(lessonId);
+      if (lesson) {
+        // Calculate and update course progress
+        const allLessons = await storage.getCourseLessons(lesson.courseId);
+        const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
+        const progress = Math.round((userProgress.length / allLessons.length) * 100);
+        
+        await storage.updateEnrollmentProgress(userId, lesson.courseId, progress);
+
+        // Issue certificate if course is completed
+        if (progress === 100) {
+          const course = await storage.getCourse(lesson.courseId);
+          if (course?.hasCertificate) {
+            await storage.issueCertificate(userId, lesson.courseId);
+          }
+        }
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking lesson complete:", error);
+      res.status(500).json({ message: "Failed to mark lesson complete" });
+    }
+  });
+
+  // Get user certificates
+  app.get("/api/my-certificates", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const certificates = await storage.getUserCertificates(userId);
+      res.json(certificates);
+    } catch (error) {
+      console.error("Error fetching user certificates:", error);
+      res.status(500).json({ message: "Failed to fetch certificates" });
+    }
+  });
+
+  // Create course review
+  app.post("/api/courses/:id/reviews", isAuthenticated, async (req: any, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const userId = req.user.claims.sub;
+
+      const reviewData = insertReviewSchema.parse({
+        ...req.body,
+        userId,
+        courseId,
+      });
+
+      const review = await storage.createReview(reviewData);
+      res.json(review);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid review data", errors: error.errors });
+      }
+      console.error("Error creating review:", error);
+      res.status(500).json({ message: "Failed to create review" });
+    }
+  });
+
+  // Admin routes (for demo purposes, these would normally require admin auth)
+  
+  // Create instructor
+  app.post("/api/instructors", async (req, res) => {
+    try {
+      const instructorData = insertInstructorSchema.parse(req.body);
+      const instructor = await storage.createInstructor(instructorData);
+      res.json(instructor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid instructor data", errors: error.errors });
+      }
+      console.error("Error creating instructor:", error);
+      res.status(500).json({ message: "Failed to create instructor" });
+    }
+  });
+
+  // Create course
+  app.post("/api/courses", async (req, res) => {
+    try {
+      const courseData = insertCourseSchema.parse(req.body);
+      const course = await storage.createCourse(courseData);
+      res.json(course);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid course data", errors: error.errors });
+      }
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  // Create lesson
+  app.post("/api/lessons", async (req, res) => {
+    try {
+      const lessonData = insertLessonSchema.parse(req.body);
+      const lesson = await storage.createLesson(lessonData);
+      res.json(lesson);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      console.error("Error creating lesson:", error);
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  const httpServer = createServer(app);
+  return httpServer;
+}

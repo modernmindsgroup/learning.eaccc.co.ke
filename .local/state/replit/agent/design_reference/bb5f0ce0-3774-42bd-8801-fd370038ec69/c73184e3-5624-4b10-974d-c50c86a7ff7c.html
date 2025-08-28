@@ -1,0 +1,620 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EACCC Learning - Empowering Africa Through Skills and Service Excellence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'eaccc-blue': '#0097D7',
+                        'eaccc-orange': '#F7941D',
+                        'eaccc-green': '#34A853',
+                        'eaccc-bg': '#F8F9FA'
+                    },
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="font-inter bg-eaccc-bg">
+
+    <!-- @COMPONENT: Header [navigation, logo, search, auth buttons] -->
+    <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo Section -->
+                <div class="flex items-center space-x-4">
+                    <!-- EACCC Logo placeholder - replace with actual logo -->
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-eaccc-blue rounded-full flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-semibold text-eaccc-blue">EACCC Learning</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-eaccc-blue font-medium border-b-2 border-eaccc-blue pb-4">Home</a>
+                    <a href="#" class="text-gray-600 hover:text-eaccc-blue transition-colors pb-4">Courses</a>
+                    <a href="#" class="text-gray-600 hover:text-eaccc-blue transition-colors pb-4">Instructors</a>
+                    <a href="#" class="text-gray-600 hover:text-eaccc-blue transition-colors pb-4">Store</a>
+                    <a href="#" class="text-gray-600 hover:text-eaccc-blue transition-colors pb-4">Forums</a>
+                    <a href="#" class="text-gray-600 hover:text-eaccc-blue transition-colors pb-4">Contact</a>
+                </nav>
+
+                <!-- Search and Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Search Bar -->
+                    <div class="hidden md:flex relative">
+                        <input type="text" placeholder="Search courses..." 
+                               class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eaccc-blue focus:border-transparent"
+                               data-implementation="Search functionality with course filtering">
+                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+
+                    <!-- Currency Selector -->
+                    <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-eaccc-blue">
+                        <option>KES</option>
+                        <option>USD</option>
+                    </select>
+
+                    <!-- Auth Buttons -->
+                    <button class="hidden md:block text-eaccc-blue hover:bg-eaccc-blue hover:text-white px-4 py-2 rounded-lg border border-eaccc-blue transition-colors"
+                            data-event="click:showLogin">Login</button>
+                    <button class="bg-eaccc-orange hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                            data-event="click:showRegister">Register</button>
+
+                    <!-- Mobile Menu Button -->
+                    <button class="md:hidden p-2 text-gray-600" data-event="click:toggleMobileMenu">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: Header -->
+
+    <!-- @COMPONENT: HeroSection [main banner with CTA] -->
+    <section class="relative bg-gradient-to-r from-eaccc-blue to-blue-600 text-white">
+        <!-- Background image with overlay -->
+        <!-- A diverse group of African professionals in a modern training facility -->
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+            <div class="max-w-3xl">
+                <h1 class="text-4xl lg:text-6xl font-bold leading-tight mb-6">
+                    Empowering Africa Through Skills and Service Excellence
+                </h1>
+                <p class="text-xl lg:text-2xl mb-8 text-blue-100">
+                    Join thousands of learners across East Africa in developing world-class customer service and professional skills.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-eaccc-orange hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                            data-event="click:browseCourses">
+                        <i class="fas fa-play-circle mr-2"></i>
+                        Browse Courses
+                    </button>
+                    <button class="border-2 border-white text-white hover:bg-white hover:text-eaccc-blue px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                            data-event="click:learnMore">
+                        Learn More
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: HeroSection -->
+
+    <!-- @COMPONENT: StatsSection [key metrics display] -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                <div class="p-6">
+                    <div class="w-16 h-16 bg-eaccc-blue bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chalkboard-teacher text-2xl text-eaccc-blue"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-eaccc-blue mb-2" data-bind="stats.instructors">2</h3>
+                    <p class="text-gray-600">Skillful Instructors</p>
+                </div>
+                <div class="p-6">
+                    <div class="w-16 h-16 bg-eaccc-green bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-2xl text-eaccc-green"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-eaccc-green mb-2" data-bind="stats.students">11</h3>
+                    <p class="text-gray-600">Happy Students</p>
+                </div>
+                <div class="p-6">
+                    <div class="w-16 h-16 bg-eaccc-orange bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-video text-2xl text-eaccc-orange"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-eaccc-orange mb-2" data-bind="stats.courses">4</h3>
+                    <p class="text-gray-600">Video Courses</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: StatsSection -->
+
+    <!-- @COMPONENT: NewestCourses [horizontal scrolling course cards] -->
+    <section class="bg-eaccc-bg py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Newest Courses</h2>
+                <a href="#" class="text-eaccc-blue hover:text-blue-700 font-semibold">View All <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            
+            <div class="flex space-x-6 overflow-x-auto pb-4">
+                <!-- @MAP: newestCourses.map(course => ( -->
+                <div class="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Professional customer service training session with African participants -->
+                    <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="Customer service training" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-sm font-semibold">FREE</span>
+                            <span class="text-gray-500 text-sm">2:07 Hours</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2" data-bind="course.title">Customer Excellence Final</h3>
+                        <p class="text-gray-600 mb-3" data-bind="course.instructor">by Onsongo James</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-gray-600 text-sm ml-2">(5.0)</span>
+                            </div>
+                            <button class="bg-eaccc-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                                    data-event="click:enrollCourse">Enroll Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Advanced customer experience workshop in modern office setting -->
+                    <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="Advanced customer experience workshop" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-sm font-semibold">FREE</span>
+                            <span class="text-gray-500 text-sm">9:20 Hours</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Advanced Course: Mastering Customer Experience</h3>
+                        <p class="text-gray-600 mb-3">by Samuel Onsongo</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-gray-600 text-sm ml-2">(4.9)</span>
+                            </div>
+                            <button class="bg-eaccc-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Enroll Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-shrink-0 w-80 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Customer service representative helping clients in modern office -->
+                    <img src="https://images.unsplash.com/photo-1556761175-b413da4baf72?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="Customer service training" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-sm font-semibold">FREE</span>
+                            <span class="text-gray-500 text-sm">2:15 Hours</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-2">Intermediate Course: Enhancing Customer Experience</h3>
+                        <p class="text-gray-600 mb-3">by Samuel Onsongo</p>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <span class="text-gray-600 text-sm ml-2">(4.8)</span>
+                            </div>
+                            <button class="bg-eaccc-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">Enroll Now</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: NewestCourses -->
+
+    <!-- @COMPONENT: FreeCourses [grid layout of free courses] -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Free Courses</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Start your learning journey with our comprehensive free courses designed specifically for African professionals.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                <!-- @MAP: freeCourses.map(course => ( -->
+                <div class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <div class="flex">
+                        <!-- Customer service basics training with diverse participants -->
+                        <img src="https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=160" 
+                             alt="Customer service basics" class="w-48 h-40 object-cover rounded-l-xl">
+                        <div class="flex-1 p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="bg-eaccc-orange text-white px-3 py-1 rounded-full text-xs font-semibold">BESTSELLER</span>
+                                <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-xs font-semibold">FREE</span>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Basic Learner Course: Introduction to Customer Service</h3>
+                            <p class="text-gray-600 text-sm mb-3">by Onsongo James • 2:00 Hours</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="text-gray-600 text-sm ml-2">(4.9)</span>
+                                </div>
+                                <button class="bg-eaccc-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    Start Learning
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <div class="flex">
+                        <!-- Professional development seminar with African business leaders -->
+                        <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&h=160" 
+                             alt="Professional development" class="w-48 h-40 object-cover rounded-l-xl">
+                        <div class="flex-1 p-6">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="bg-blue-100 text-eaccc-blue px-3 py-1 rounded-full text-xs font-semibold">INTERMEDIATE</span>
+                                <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-xs font-semibold">FREE</span>
+                            </div>
+                            <h3 class="text-lg font-semibold mb-2">Intermediate Course: Enhancing Customer Experience</h3>
+                            <p class="text-gray-600 text-sm mb-3">by Samuel Onsongo • 2:15 Hours</p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="text-gray-600 text-sm ml-2">(4.8)</span>
+                                </div>
+                                <button class="bg-eaccc-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    Start Learning
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: FreeCourses -->
+
+    <!-- @COMPONENT: Testimonials [carousel with learner testimonials] -->
+    <section class="bg-eaccc-bg py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">What Our Learners Say</h2>
+                <p class="text-xl text-gray-600">Join thousands of satisfied professionals across East Africa</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- @MAP: testimonials.map(testimonial => ( -->
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center" data-mock="true">
+                    <!-- Professional African woman smiling in business attire -->
+                    <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
+                         alt="Sarah Mbeki" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover">
+                    <div class="flex justify-center mb-4">
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 italic">"The customer service course transformed how I interact with clients. The practical approaches are perfect for our African market context."</p>
+                    <h4 class="font-semibold text-gray-900">Sarah Mbeki</h4>
+                    <p class="text-gray-500 text-sm">Customer Relations Manager, Nairobi</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center" data-mock="true">
+                    <!-- Professional African man in business suit smiling -->
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100" 
+                         alt="James Kinyua" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover">
+                    <div class="flex justify-center mb-4">
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 italic">"EACCC's courses are world-class yet tailored for our local business environment. The certificate has opened new career opportunities."</p>
+                    <h4 class="font-semibold text-gray-900">James Kinyua</h4>
+                    <p class="text-gray-500 text-sm">Business Development, Kampala</p>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center" data-mock="true">
+                    <!-- Professional African woman in modern office setting -->
+                    <img src="https://pixabay.com/get/g0b8ad509b64ddc229359a6b65426fec6afdb7e61153ea6ef92698393dd303ecab740b9e4fd5796cad2d5af7f63a188effbd46c67b9374576ba3fefcce4f8b178_1280.jpg" 
+                         alt="Grace Mwangi" class="w-16 h-16 rounded-full mx-auto mb-4 object-cover">
+                    <div class="flex justify-center mb-4">
+                        <div class="flex text-yellow-400">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-4 italic">"The instructors understand our unique challenges in East Africa. Every lesson is practical and immediately applicable to my work."</p>
+                    <h4 class="font-semibold text-gray-900">Grace Mwangi</h4>
+                    <p class="text-gray-500 text-sm">Operations Manager, Dar es Salaam</p>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: Testimonials -->
+
+    <!-- @COMPONENT: BlogPreview [recent blog posts] -->
+    <section class="bg-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Latest Insights</h2>
+                <a href="#" class="text-eaccc-blue hover:text-blue-700 font-semibold">View All Articles <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- @MAP: blogPosts.map(post => ( -->
+                <article class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Modern African business conference with professionals networking -->
+                    <img src="https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="African business conference" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center mb-3">
+                            <span class="bg-eaccc-blue text-white px-3 py-1 rounded-full text-xs font-semibold">INDUSTRY INSIGHTS</span>
+                            <span class="text-gray-500 text-sm ml-3">Dec 10, 2024</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">The Future of Customer Service in East Africa</h3>
+                        <p class="text-gray-600 mb-4">Exploring emerging trends and technologies that are reshaping customer experience across the region...</p>
+                        <a href="#" class="text-eaccc-blue hover:text-blue-700 font-semibold">Read More <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </article>
+
+                <article class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Digital transformation in African businesses -->
+                    <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="Digital transformation in business" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center mb-3">
+                            <span class="bg-eaccc-green text-white px-3 py-1 rounded-full text-xs font-semibold">SKILLS DEVELOPMENT</span>
+                            <span class="text-gray-500 text-sm ml-3">Dec 8, 2024</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Building Digital Skills for Modern Customer Care</h3>
+                        <p class="text-gray-600 mb-4">Essential digital competencies every customer service professional should master in today's connected world...</p>
+                        <a href="#" class="text-eaccc-blue hover:text-blue-700 font-semibold">Read More <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </article>
+
+                <article class="bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-shadow" data-mock="true">
+                    <!-- Professional development and career growth -->
+                    <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200" 
+                         alt="Professional development" class="w-full h-48 object-cover rounded-t-xl">
+                    <div class="p-6">
+                        <div class="flex items-center mb-3">
+                            <span class="bg-eaccc-orange text-white px-3 py-1 rounded-full text-xs font-semibold">CAREER GROWTH</span>
+                            <span class="text-gray-500 text-sm ml-3">Dec 5, 2024</span>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">Career Advancement Through Professional Certification</h3>
+                        <p class="text-gray-600 mb-4">How EACCC certification can accelerate your career growth and open new opportunities in the service industry...</p>
+                        <a href="#" class="text-eaccc-blue hover:text-blue-700 font-semibold">Read More <i class="fas fa-arrow-right ml-1"></i></a>
+                    </div>
+                </article>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: BlogPreview -->
+
+    <!-- @COMPONENT: CTASection [call to action section] -->
+    <section class="bg-gradient-to-r from-eaccc-blue to-blue-600 text-white py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 class="text-3xl lg:text-4xl font-bold mb-4">Ready to Transform Your Career?</h2>
+            <p class="text-xl mb-8 text-blue-100 max-w-3xl mx-auto">
+                Join the growing community of African professionals mastering customer service excellence. Start your learning journey today with our expert-designed courses.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button class="bg-eaccc-orange hover:bg-orange-600 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                        data-event="click:startLearning">
+                    <i class="fas fa-graduation-cap mr-2"></i>
+                    Start Learning Today
+                </button>
+                <button class="border-2 border-white text-white hover:bg-white hover:text-eaccc-blue px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                        data-event="click:viewCourses">
+                    View All Courses
+                </button>
+            </div>
+        </div>
+    </section>
+    <!-- @END_COMPONENT: CTASection -->
+
+    <!-- @COMPONENT: Footer [site footer with links and info] -->
+    <footer class="bg-gray-900 text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Company Info -->
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-8 h-8 bg-eaccc-blue rounded-full flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-sm"></i>
+                        </div>
+                        <span class="text-xl font-semibold">EACCC Learning</span>
+                    </div>
+                    <p class="text-gray-300 mb-4 max-w-md">
+                        Empowering African professionals with world-class customer service and business skills training. Building excellence across East Africa, one learner at a time.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-eaccc-blue transition-colors">
+                            <i class="fab fa-facebook-f text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-eaccc-blue transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-eaccc-blue transition-colors">
+                            <i class="fab fa-linkedin-in text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-eaccc-blue transition-colors">
+                            <i class="fab fa-youtube text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Courses</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Instructors</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Certificates</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Blog</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Support</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-300 hover:text-white transition-colors">Refund Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-400 text-sm mb-4 md:mb-0">
+                    © 2024 East Africa Customer Care Centre Ltd. All rights reserved.
+                </p>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-400 text-sm">Payment Methods:</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-gray-800 px-3 py-1 rounded text-xs text-gray-300">Paystack</span>
+                        <span class="bg-gray-800 px-3 py-1 rounded text-xs text-gray-300">PesaPal</span>
+                        <span class="bg-gray-800 px-3 py-1 rounded text-xs text-gray-300">M-Pesa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- @END_COMPONENT: Footer -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        // Basic interactive functionality demonstrations
+        (function() {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('[data-event="click:toggleMobileMenu"]');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    console.log('Mobile menu toggle clicked');
+                    // TODO: Implement mobile menu toggle
+                });
+            }
+
+            // Course enrollment buttons
+            const enrollButtons = document.querySelectorAll('[data-event^="click:enroll"]');
+            enrollButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log('Enroll button clicked');
+                    // TODO: Implement course enrollment flow
+                });
+            });
+
+            // Search functionality
+            const searchInput = document.querySelector('input[type="text"][placeholder*="Search"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    console.log('Search input:', this.value);
+                    // TODO: Implement real-time search
+                });
+            }
+
+            // Auth buttons
+            const loginBtn = document.querySelector('[data-event="click:showLogin"]');
+            const registerBtn = document.querySelector('[data-event="click:showRegister"]');
+            
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function() {
+                    console.log('Login clicked');
+                    // TODO: Show login modal/redirect to login page
+                });
+            }
+
+            if (registerBtn) {
+                registerBtn.addEventListener('click', function() {
+                    console.log('Register clicked');
+                    // TODO: Show registration modal/redirect to register page
+                });
+            }
+
+            // Course browsing
+            const browseCoursesBtns = document.querySelectorAll('[data-event*="browseCourses"], [data-event*="viewCourses"], [data-event*="startLearning"]');
+            browseCoursesBtns.forEach(button => {
+                button.addEventListener('click', function() {
+                    console.log('Browse courses clicked');
+                    // TODO: Navigate to courses page
+                });
+            });
+
+            // Smooth scrolling for internal links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        })();
+    </script>
+
+</body>
+</html>
