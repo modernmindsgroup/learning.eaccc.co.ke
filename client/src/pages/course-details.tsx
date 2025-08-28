@@ -111,16 +111,10 @@ export default function CourseDetails() {
       return await response.json();
     },
     onSuccess: (data: any) => {
-      console.log("Payment response received:", data);
-      console.log("Data status:", data.status);
-      console.log("Data.data:", data.data);
-      console.log("Authorization URL:", data.data?.authorization_url);
-      
       if (data.status && data.data?.authorization_url) {
         // Redirect to Paystack payment page
         window.location.href = data.data.authorization_url;
       } else {
-        console.error("Payment initialization failed - invalid response structure:", data);
         toast({
           title: "Payment Failed",
           description: "Unable to initialize payment. Please try again.",

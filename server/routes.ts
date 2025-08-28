@@ -505,7 +505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Verify payment
       const verification = await paystackService.verifyPayment(reference as string);
 
-      if (verification.status && verification.data.status === "success") {
+      if (verification && verification.status && verification.data.status === "success") {
         // Get order
         const order = await storage.getOrderByReference(reference as string);
         
@@ -547,7 +547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const verification = await paystackService.verifyPayment(reference);
 
-      if (verification.status && verification.data.status === "success") {
+      if (verification && verification.status && verification.data.status === "success") {
         // Get order
         const order = await storage.getOrderByReference(reference);
         

@@ -487,21 +487,25 @@ export class DatabaseStorage implements IStorage {
 
   // Lesson progress operations
   async markLessonComplete(userId: string, lessonId: number): Promise<void> {
-    await db
-      .insert(lessonProgress)
-      .values({
-        userId,
-        lessonId,
-        completed: true,
-        completedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [lessonProgress.userId, lessonProgress.lessonId],
-        set: {
+    try {
+      await db
+        .insert(lessonProgress)
+        .values({
+          userId,
+          lessonId,
           completed: true,
           completedAt: new Date(),
-        },
-      });
+        });
+    } catch (error) {
+      // If record already exists, update it
+      await db
+        .update(lessonProgress)
+        .set({
+          completed: true,
+          completedAt: new Date(),
+        })
+        .where(and(eq(lessonProgress.userId, userId), eq(lessonProgress.lessonId, lessonId)));
+    }
   }
 
   async getUserLessonProgress(userId: string, courseId: number): Promise<LessonProgress[]> {
