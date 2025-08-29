@@ -51,7 +51,7 @@ export default function Learning() {
     queryKey: ["/api/courses", courseId],
   });
 
-  const { data: lessons } = useQuery<Lesson[]>({
+  const { data: lessons, isLoading: lessonsLoading } = useQuery<Lesson[]>({
     queryKey: ["/api/courses", courseId, "lessons"],
   });
 
@@ -224,12 +224,35 @@ export default function Learning() {
     setExpandedSections(newExpanded);
   };
 
-  if (authLoading || !course || !currentLesson) {
+  // Loading state - only show spinner if data is actually loading
+  if (authLoading || !course || lessonsLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-eaccc-blue mx-auto mb-4"></div>
           <p className="text-gray-600">Loading course...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No lessons available - show proper message instead of infinite loading
+  if (!currentLesson && allLessons.length === 0) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-6xl mb-4">📚</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Course Content Coming Soon</h2>
+          <p className="text-gray-600 mb-6">
+            You're enrolled in this course, but lessons haven't been added yet. 
+            Check back soon for updates!
+          </p>
+          <Button 
+            onClick={() => window.location.href = `/courses/${courseId}`}
+            className="bg-[#0097D7] hover:bg-[#0097D7]/90 text-white"
+          >
+            Back to Course Details
+          </Button>
         </div>
       </div>
     );
