@@ -44,6 +44,9 @@ export default function CourseDetails() {
         description: "Welcome to your new course! You can now start learning.",
         variant: "default",
       });
+      // Refresh course data to show enrollment status
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/my-enrollments"] });
       // Clear the URL parameter
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
@@ -57,7 +60,7 @@ export default function CourseDetails() {
       const newUrl = window.location.pathname;
       window.history.replaceState({}, document.title, newUrl);
     }
-  }, [toast]);
+  }, [toast, courseId, queryClient]);
 
   const { data: course, isLoading } = useQuery<CourseWithProgress>({
     queryKey: ["/api/courses", courseId],

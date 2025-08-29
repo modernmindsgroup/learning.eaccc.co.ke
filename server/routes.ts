@@ -309,7 +309,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate and update course progress
         const allLessons = await storage.getCourseLessons(lesson.courseId);
         const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
-        const progress = Math.round((userProgress.length / allLessons.length) * 100);
+        const completedCount = userProgress.filter(p => p.completed).length;
+        const progress = Math.round((completedCount / allLessons.length) * 100);
+
+        // Update enrollment progress
+        await storage.updateEnrollmentProgress(userId, lesson.courseId, progress);
+
+        // Auto-generate certificate if course is completed
+        if (progress === 100) {
+          try {
+            const existingCertificates = await storage.getUserCertificates(userId);
+            const hasCertificateForCourse = existingCertificates.some(cert => cert.courseId === lesson.courseId);
+            
+            if (!hasCertificateForCourse) {
+              await storage.issueCertificate(userId, lesson.courseId);
+              console.log(`Certificate issued for user ${userId} for course ${lesson.courseId}`);
+            }
+          } catch (error) {
+            console.error("Error issuing certificate:", error);
+            // Don't fail the lesson completion if certificate generation fails
+          }
+        }
         
         await storage.updateEnrollmentProgress(userId, lesson.courseId, progress);
 
