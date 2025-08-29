@@ -11,6 +11,7 @@ import Courses from "@/pages/courses";
 import CourseDetails from "@/pages/course-details";
 import Learning from "@/pages/learning";
 import Dashboard from "@/pages/dashboard";
+import Demo from "@/pages/demo";
 import Instructors from "@/pages/instructors";
 import Store from "@/pages/store";
 import Forums from "@/pages/forums";
@@ -24,6 +25,7 @@ function Router() {
       {/* Public routes - accessible to everyone */}
       <Route path="/courses" component={Courses} />
       <Route path="/courses/:id" component={CourseDetails} />
+      <Route path="/demo/:id" component={Demo} />
       <Route path="/instructors" component={Instructors} />
       <Route path="/store" component={Store} />
       <Route path="/forums" component={Forums} />

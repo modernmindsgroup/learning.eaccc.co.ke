@@ -666,6 +666,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Demo lesson routes
+  app.get("/api/courses/:id/demo", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Return demo lesson data
+      const demoLesson = {
+        id: `demo_${courseId}`,
+        courseId: courseId,
+        title: "Welcome to Customer Service Excellence",
+        description: "Experience a sample lesson from our comprehensive customer service training program.",
+        content: `
+          <h2>Welcome to Customer Service Excellence</h2>
+          <p>In this demo lesson, you'll learn the fundamentals of excellent customer service that can transform your career and business relationships.</p>
+          
+          <h3>What You'll Discover:</h3>
+          <ul>
+            <li><strong>Active Listening:</strong> How to truly understand your customers' needs</li>
+            <li><strong>Empathy in Action:</strong> Connecting with customers on a human level</li>
+            <li><strong>Problem Resolution:</strong> Turning challenges into opportunities</li>
+            <li><strong>Professional Communication:</strong> Clear, confident, and respectful interactions</li>
+          </ul>
+          
+          <h3>Key Principle: The CARE Method</h3>
+          <p><strong>C</strong>onnect - Build rapport with genuine interest</p>
+          <p><strong>A</strong>cknowledge - Validate their concerns and feelings</p>
+          <p><strong>R</strong>esolve - Take action to address their needs</p>
+          <p><strong>E</strong>nsure - Follow up to guarantee satisfaction</p>
+          
+          <blockquote style="border-left: 4px solid #0097D7; padding-left: 16px; margin: 20px 0; font-style: italic;">
+            "Great customer service is about making people feel valued, heard, and appreciated. It's not just about solving problems - it's about creating positive experiences that people remember."
+          </blockquote>
+          
+          <h3>Practice Exercise:</h3>
+          <p>Think of a time when you received exceptional customer service. What made it memorable? How did it make you feel? This is the standard we aim to achieve in every interaction.</p>
+          
+          <p><strong>Congratulations!</strong> You've completed this demo lesson. This is just a taste of the comprehensive training available in our full course.</p>
+        `,
+        duration: "5 min",
+        videoUrl: null,
+        order: 0,
+        sectionTitle: "Demo",
+        sectionOrder: 0,
+        isDemo: true
+      };
+
+      res.json(demoLesson);
+    } catch (error) {
+      console.error("Get demo lesson error:", error);
+      res.status(500).json({ message: "Failed to fetch demo lesson" });
+    }
+  });
+
+  app.post("/api/courses/:id/demo/complete", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Generate demo certificate
+      const demoCertificate = {
+        id: `demo_cert_${courseId}_${Date.now()}`,
+        courseId: courseId,
+        courseName: course.title,
+        studentName: "Demo Student",
+        completionDate: new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+        isDemo: true
+      };
+
+      res.json({ 
+        message: "Demo lesson completed!", 
+        certificate: demoCertificate 
+      });
+    } catch (error) {
+      console.error("Complete demo lesson error:", error);
+      res.status(500).json({ message: "Failed to complete demo lesson" });
+    }
+  });
+
   // Dashboard routes
   app.get("/api/my-enrollments", isAuthenticated, async (req: any, res) => {
     try {

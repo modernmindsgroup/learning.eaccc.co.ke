@@ -423,6 +423,17 @@ export default function CourseDetails() {
 
                   {/* Action Buttons */}
                   <div className="space-y-3">
+                    {/* Demo Button - Always visible */}
+                    <Button 
+                      variant="outline"
+                      className="w-full border-[#0097D7] text-[#0097D7] hover:bg-[#0097D7] hover:text-white"
+                      onClick={() => window.location.href = `/demo/${course.id}`}
+                      data-testid="button-try-demo"
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Try Demo Lesson
+                    </Button>
+
                     {canEnroll && (
                       <>
                         {course.price === "0" || course.price === "0.00" ? (
