@@ -122,7 +122,7 @@ export async function setupAuth(app: Express) {
           return res.redirect("/api/login");
         }
         
-        // Serve a simple HTML page that handles the redirect using localStorage
+        // Serve a simple HTML page that handles the redirect using sessionStorage
         const html = `
           <!DOCTYPE html>
           <html>
@@ -131,9 +131,21 @@ export async function setupAuth(app: Express) {
           </head>
           <body>
             <script>
-              const redirectUrl = localStorage.getItem('redirectAfterLogin');
-              localStorage.removeItem('redirectAfterLogin');
-              window.location.href = redirectUrl || '/';
+              // Check for portal redirects
+              const adminRedirect = sessionStorage.getItem('admin_login_redirect');
+              const instructorRedirect = sessionStorage.getItem('instructor_login_redirect');
+              
+              if (adminRedirect) {
+                sessionStorage.removeItem('admin_login_redirect');
+                window.location.href = '/admin';
+              } else if (instructorRedirect) {
+                sessionStorage.removeItem('instructor_login_redirect');
+                window.location.href = '/instructor';
+              } else {
+                const redirectUrl = localStorage.getItem('redirectAfterLogin');
+                localStorage.removeItem('redirectAfterLogin');
+                window.location.href = redirectUrl || '/';
+              }
             </script>
           </body>
           </html>
