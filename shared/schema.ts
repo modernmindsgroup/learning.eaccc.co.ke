@@ -33,6 +33,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").default("student"), // student, instructor, admin
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -40,6 +41,7 @@ export const users = pgTable("users", {
 // Instructors table
 export const instructors = pgTable("instructors", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id), // Link to user account
   name: varchar("name", { length: 255 }).notNull(),
   bio: text("bio"),
   email: varchar("email", { length: 255 }).unique(),

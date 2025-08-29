@@ -100,6 +100,29 @@ export interface IStorage {
   getOrderByReference(reference: string): Promise<Order | undefined>;
   updateOrderStatus(id: number, status: string, paystackReference?: string): Promise<void>;
   getUserOrders(userId: string): Promise<(Order & { course: Course })[]>;
+
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  getAllCourses(): Promise<Course[]>;
+  updateUserRole(userId: string, role: string): Promise<void>;
+  getAdminStats(): Promise<{
+    totalUsers: number;
+    totalCourses: number;
+    totalInstructors: number;
+    totalRevenue: number;
+    recentEnrollments: number;
+  }>;
+
+  // Instructor operations
+  getInstructorStats(userId: string): Promise<{
+    totalCourses: number;
+    totalStudents: number;
+    totalRevenue: number;
+    avgRating: number;
+  }>;
+  getInstructorCourses(userId: string): Promise<Course[]>;
+  getInstructorAnalytics(userId: string): Promise<any[]>;
+  getInstructorStudents(userId: string): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -679,6 +702,199 @@ export class DatabaseStorage implements IStorage {
       .innerJoin(courses, eq(orders.courseId, courses.id))
       .where(eq(orders.userId, userId))
       .orderBy(desc(orders.createdAt));
+  }
+
+  // Admin operations
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async getAllCourses(): Promise<Course[]> {
+    return await db.select().from(courses).orderBy(desc(courses.createdAt));
+  }
+
+  async updateUserRole(userId: string, role: string): Promise<void> {
+    await db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, userId));
+  }
+
+  async getAdminStats(): Promise<{
+    totalUsers: number;
+    totalCourses: number;
+    totalInstructors: number;
+    totalRevenue: number;
+    recentEnrollments: number;
+  }> {
+    const [userCountResult] = await db.select({ count: count(users.id) }).from(users);
+    const [courseCountResult] = await db.select({ count: count(courses.id) }).from(courses);
+    const [instructorCountResult] = await db.select({ count: count(instructors.id) }).from(instructors);
+    
+    // Calculate total revenue from completed orders
+    const [revenueResult] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${orders.amount}), 0)` })
+      .from(orders)
+      .where(eq(orders.status, "completed"));
+
+    // Recent enrollments (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const [recentEnrollmentsResult] = await db
+      .select({ count: count(enrollments.id) })
+      .from(enrollments)
+      .where(sql`${enrollments.enrolledAt} >= ${thirtyDaysAgo}`);
+
+    return {
+      totalUsers: userCountResult.count,
+      totalCourses: courseCountResult.count,
+      totalInstructors: instructorCountResult.count,
+      totalRevenue: Number(revenueResult.total) || 0,
+      recentEnrollments: recentEnrollmentsResult.count,
+    };
+  }
+
+  // Instructor operations
+  async getInstructorStats(userId: string): Promise<{
+    totalCourses: number;
+    totalStudents: number;
+    totalRevenue: number;
+    avgRating: number;
+  }> {
+    // Get instructor record
+    const [instructor] = await db
+      .select()
+      .from(instructors)
+      .where(eq(instructors.userId, userId));
+
+    if (!instructor) {
+      return { totalCourses: 0, totalStudents: 0, totalRevenue: 0, avgRating: 0 };
+    }
+
+    // Count courses by this instructor
+    const [courseCountResult] = await db
+      .select({ count: count(courses.id) })
+      .from(courses)
+      .where(eq(courses.instructorId, instructor.id));
+
+    // Count total students enrolled in instructor's courses
+    const [studentCountResult] = await db
+      .select({ count: count(enrollments.id) })
+      .from(enrollments)
+      .innerJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(eq(courses.instructorId, instructor.id));
+
+    // Calculate revenue from instructor's courses
+    const [revenueResult] = await db
+      .select({ total: sql<number>`COALESCE(SUM(${orders.amount}), 0)` })
+      .from(orders)
+      .innerJoin(courses, eq(orders.courseId, courses.id))
+      .where(and(
+        eq(courses.instructorId, instructor.id),
+        eq(orders.status, "completed")
+      ));
+
+    // Calculate average rating for instructor's courses
+    const [ratingResult] = await db
+      .select({ avg: sql<number>`COALESCE(AVG(${courses.rating}), 0)` })
+      .from(courses)
+      .where(eq(courses.instructorId, instructor.id));
+
+    return {
+      totalCourses: courseCountResult.count,
+      totalStudents: studentCountResult.count,
+      totalRevenue: Number(revenueResult.total) || 0,
+      avgRating: Number(ratingResult.avg) || 0,
+    };
+  }
+
+  async getInstructorCourses(userId: string): Promise<Course[]> {
+    // Get instructor record
+    const [instructor] = await db
+      .select()
+      .from(instructors)
+      .where(eq(instructors.userId, userId));
+
+    if (!instructor) {
+      return [];
+    }
+
+    return await db
+      .select()
+      .from(courses)
+      .where(eq(courses.instructorId, instructor.id))
+      .orderBy(desc(courses.createdAt));
+  }
+
+  async getInstructorAnalytics(userId: string): Promise<any[]> {
+    // Get instructor record
+    const [instructor] = await db
+      .select()
+      .from(instructors)
+      .where(eq(instructors.userId, userId));
+
+    if (!instructor) {
+      return [];
+    }
+
+    // Get analytics for each course
+    const courseAnalytics = await db
+      .select({
+        courseId: courses.id,
+        title: courses.title,
+        enrollments: sql<number>`COALESCE(COUNT(DISTINCT ${enrollments.id}), 0)`,
+        completions: sql<number>`COALESCE(COUNT(DISTINCT CASE WHEN ${enrollments.progress} = 100 THEN ${enrollments.id} END), 0)`,
+        revenue: sql<number>`COALESCE(SUM(CASE WHEN ${orders.status} = 'completed' THEN ${orders.amount} ELSE 0 END), 0)`,
+        rating: courses.rating,
+      })
+      .from(courses)
+      .leftJoin(enrollments, eq(courses.id, enrollments.courseId))
+      .leftJoin(orders, eq(courses.id, orders.courseId))
+      .where(eq(courses.instructorId, instructor.id))
+      .groupBy(courses.id, courses.title, courses.rating);
+
+    return courseAnalytics.map(row => ({
+      courseId: row.courseId,
+      title: row.title,
+      enrollments: Number(row.enrollments),
+      completions: Number(row.completions),
+      revenue: Number(row.revenue),
+      rating: Number(row.rating),
+    }));
+  }
+
+  async getInstructorStudents(userId: string): Promise<any[]> {
+    // Get instructor record
+    const [instructor] = await db
+      .select()
+      .from(instructors)
+      .where(eq(instructors.userId, userId));
+
+    if (!instructor) {
+      return [];
+    }
+
+    // Get students enrolled in instructor's courses
+    const studentProgress = await db
+      .select({
+        userId: users.id,
+        studentName: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`,
+        courseTitle: courses.title,
+        progress: enrollments.progress,
+        enrolledAt: enrollments.enrolledAt,
+        lastActive: enrollments.enrolledAt, // Using enrolled date as placeholder for last active
+      })
+      .from(enrollments)
+      .innerJoin(courses, eq(enrollments.courseId, courses.id))
+      .innerJoin(users, eq(enrollments.userId, users.id))
+      .where(eq(courses.instructorId, instructor.id))
+      .orderBy(desc(enrollments.enrolledAt));
+
+    return studentProgress.map(row => ({
+      userId: row.userId,
+      studentName: row.studentName,
+      courseTitle: row.courseTitle,
+      progress: row.progress || 0,
+      enrolledAt: row.enrolledAt?.toISOString() || "",
+      lastActive: row.lastActive?.toISOString() || "",
+    }));
   }
 }
 

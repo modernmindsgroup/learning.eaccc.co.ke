@@ -3,6 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { requireAdmin, requireInstructor, requireInstructorOrAdmin } from "./auth";
 import { 
   insertCourseSchema, 
   insertLessonSchema,
@@ -779,6 +780,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get enrollments error:", error);
       res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+
+  // Admin Dashboard Routes
+  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+    try {
+      const stats = await storage.getAdminStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Get admin stats error:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Get all users error:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/courses", requireAdmin, async (req, res) => {
+    try {
+      const courses = await storage.getAllCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error("Get all courses error:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
+  app.get("/api/admin/instructors", requireAdmin, async (req, res) => {
+    try {
+      const instructors = await storage.getInstructors();
+      res.json(instructors);
+    } catch (error) {
+      console.error("Get all instructors error:", error);
+      res.status(500).json({ message: "Failed to fetch instructors" });
+    }
+  });
+
+  app.put("/api/admin/users/:id/role", requireAdmin, async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const { role } = req.body;
+      
+      if (!["student", "instructor", "admin"].includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+
+      await storage.updateUserRole(userId, role);
+      res.json({ message: "User role updated successfully" });
+    } catch (error) {
+      console.error("Update user role error:", error);
+      res.status(500).json({ message: "Failed to update user role" });
+    }
+  });
+
+  app.post("/api/admin/instructors", requireAdmin, async (req, res) => {
+    try {
+      const instructorData = insertInstructorSchema.parse(req.body);
+      const instructor = await storage.createInstructor(instructorData);
+      res.json(instructor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid instructor data", errors: error.errors });
+      }
+      console.error("Error creating instructor:", error);
+      res.status(500).json({ message: "Failed to create instructor" });
+    }
+  });
+
+  // Instructor Dashboard Routes
+  app.get("/api/instructor/stats", requireInstructorOrAdmin, async (req: any, res) => {
+    try {
+      const userId = req.userData.id;
+      const stats = await storage.getInstructorStats(userId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Get instructor stats error:", error);
+      res.status(500).json({ message: "Failed to fetch instructor stats" });
+    }
+  });
+
+  app.get("/api/instructor/courses", requireInstructorOrAdmin, async (req: any, res) => {
+    try {
+      const userId = req.userData.id;
+      const courses = await storage.getInstructorCourses(userId);
+      res.json(courses);
+    } catch (error) {
+      console.error("Get instructor courses error:", error);
+      res.status(500).json({ message: "Failed to fetch instructor courses" });
+    }
+  });
+
+  app.get("/api/instructor/analytics", requireInstructorOrAdmin, async (req: any, res) => {
+    try {
+      const userId = req.userData.id;
+      const analytics = await storage.getInstructorAnalytics(userId);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Get instructor analytics error:", error);
+      res.status(500).json({ message: "Failed to fetch instructor analytics" });
+    }
+  });
+
+  app.get("/api/instructor/students", requireInstructorOrAdmin, async (req: any, res) => {
+    try {
+      const userId = req.userData.id;
+      const students = await storage.getInstructorStudents(userId);
+      res.json(students);
+    } catch (error) {
+      console.error("Get instructor students error:", error);
+      res.status(500).json({ message: "Failed to fetch instructor students" });
     }
   });
 

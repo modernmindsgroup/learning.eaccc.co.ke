@@ -11,6 +11,8 @@ import Courses from "@/pages/courses";
 import CourseDetails from "@/pages/course-details";
 import Learning from "@/pages/learning";
 import Dashboard from "@/pages/dashboard";
+import AdminDashboard from "@/pages/admin-dashboard";
+import InstructorDashboard from "@/pages/instructor-dashboard";
 import Demo from "@/pages/demo";
 import Instructors from "@/pages/instructors";
 import Store from "@/pages/store";
@@ -39,6 +41,8 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/learn/:courseId/:lessonId?" component={Learning} />
           <Route path="/dashboard" component={Dashboard} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/instructor" component={InstructorDashboard} />
         </>
       )}
       <Route component={NotFound} />

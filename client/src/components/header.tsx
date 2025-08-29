@@ -108,6 +108,18 @@ export default function Header() {
                     <User className="mr-2 h-4 w-4" />
                     Dashboard
                   </DropdownMenuItem>
+                  {user?.role === "admin" && (
+                    <DropdownMenuItem onClick={() => window.location.href = "/admin"}>
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  {(user?.role === "instructor" || user?.role === "admin") && (
+                    <DropdownMenuItem onClick={() => window.location.href = "/instructor"}>
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Instructor Dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => window.location.href = "/api/logout"}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
