@@ -463,6 +463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reference = `eaccc_${Date.now()}_${courseId}_${userId}`;
 
       // Create order record
+      console.log("Creating order with reference:", reference);
       const order = await storage.createOrder({
         userId,
         courseId: parseInt(courseId),
@@ -471,6 +472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: "pending",
         paystackReference: reference,
       });
+      console.log("Order created successfully:", order.id, "with reference:", order.paystackReference);
 
       // Initialize payment with Paystack
       const paymentData = {
@@ -538,9 +540,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (verification && verification.status && verification.data.status === "success") {
         console.log("Payment verified successfully, getting order...");
+        console.log("Looking for order with reference:", reference);
         // Get order
         const order = await storage.getOrderByReference(reference as string);
-        console.log("Order retrieval result:", order);
+        console.log("Order retrieval result:", order ? `Found order ${order.id}` : "Order not found");
+        console.log("Order details:", order);
         
         if (order) {
           console.log(`Found order ${order.id} for user ${order.userId} and course ${order.courseId}`);

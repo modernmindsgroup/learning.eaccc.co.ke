@@ -666,7 +666,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrderByReference(reference: string): Promise<Order | undefined> {
+    console.log("DB: Searching for order with reference:", reference);
     const [order] = await db.select().from(orders).where(eq(orders.paystackReference, reference));
+    console.log("DB: Query result:", order ? `Found order ${order.id}` : "No order found");
+    if (order) {
+      console.log("DB: Order details - ID:", order.id, "Reference:", order.paystackReference, "Status:", order.status);
+    }
     return order;
   }
 
