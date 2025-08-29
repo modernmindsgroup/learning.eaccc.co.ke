@@ -306,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get lesson to find course
       const lesson = await storage.getLesson(lessonId);
-      if (lesson) {
+      if (lesson && lesson.courseId) {
         // Calculate and update course progress
         const allLessons = await storage.getCourseLessons(lesson.courseId);
         const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const order = await storage.createOrder({
         userId,
         courseId: parseInt(courseId),
-        amount: course.price,
+        amount: course.price || "0",
         currency: "USD",
         status: "pending",
         paystackReference: reference,
@@ -474,8 +474,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Initialize payment with Paystack
       const paymentData = {
-        email: user.email,
-        amount: parseFloat(course.price) * 100, // Convert to cents
+        email: user.email!,
+        amount: parseFloat(course.price || "0") * 100, // Convert to cents
         reference,
         callback_url: `${req.protocol}://${req.get('host')}/api/payments/callback`,
         metadata: {
@@ -492,7 +492,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Payment response status type:", typeof paymentResponse?.status);
       console.log("Payment response data:", paymentResponse?.data);
 
-      if (paymentResponse && (paymentResponse.status === true || paymentResponse.status === "true")) {
+      if (paymentResponse && paymentResponse.status === true) {
         // Update order with access code
         await storage.updateOrderStatus(order.id, "pending", paymentResponse.data.access_code);
 
