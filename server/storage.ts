@@ -675,7 +675,7 @@ export class DatabaseStorage implements IStorage {
     return order;
   }
 
-  async updateOrderStatus(id: number, status: string, paystackReference?: string): Promise<void> {
+  async updateOrderStatus(id: number, status: string, paystackReference?: string, paystackAccessCode?: string): Promise<void> {
     const updateData: any = { 
       status, 
       updatedAt: new Date() 
@@ -683,6 +683,10 @@ export class DatabaseStorage implements IStorage {
     
     if (paystackReference) {
       updateData.paystackReference = paystackReference;
+    }
+    
+    if (paystackAccessCode) {
+      updateData.paystackAccessCode = paystackAccessCode;
     }
 
     await db.update(orders).set(updateData).where(eq(orders.id, id));

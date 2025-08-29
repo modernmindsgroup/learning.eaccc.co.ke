@@ -519,8 +519,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Payment response data:", paymentResponse?.data);
 
       if (paymentResponse && paymentResponse.status === true) {
-        // Update order with access code
-        await storage.updateOrderStatus(order.id, "pending", paymentResponse.data.access_code);
+        // Update order with access code (NOT the reference!)
+        console.log("Updating order with access code:", paymentResponse.data.access_code);
+        await storage.updateOrderStatus(order.id, "pending", undefined, paymentResponse.data.access_code);
 
         res.json({
           status: true,
