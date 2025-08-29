@@ -12,7 +12,7 @@ export default function Footer() {
               <img 
                 src="/attached_assets/East Africa_1756481469423.png" 
                 alt="EACCC - East Africa Customer Care Center Ltd" 
-                className="h-16 w-auto"
+                className="h-40 w-auto"
               />
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
