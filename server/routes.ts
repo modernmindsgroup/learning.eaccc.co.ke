@@ -316,6 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateEnrollmentProgress(userId, lesson.courseId, progress);
 
         // Auto-generate certificate if course is completed
+        let certificateIssued = false;
         if (progress === 100) {
           try {
             const existingCertificates = await storage.getUserCertificates(userId);
@@ -326,6 +327,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Only issue certificates for courses that have certificates enabled
               if (course?.hasCertificate) {
                 await storage.issueCertificate(userId, lesson.courseId);
+                certificateIssued = true;
                 console.log(`Certificate issued for user ${userId} for course ${lesson.courseId}`);
               }
             }
@@ -334,9 +336,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail the lesson completion if certificate generation fails
           }
         }
-      }
 
-      res.json({ success: true });
+        res.json({ 
+          success: true, 
+          progress: progress,
+          courseCompleted: progress === 100,
+          certificateIssued: certificateIssued
+        });
+      } else {
+        res.json({ success: true, progress: 0, courseCompleted: false, certificateIssued: false });
+      }
     } catch (error) {
       console.error("Error marking lesson complete:", error);
       res.status(500).json({ message: "Failed to mark lesson complete" });

@@ -114,13 +114,31 @@ export default function Learning() {
 
   const markCompleteMutation = useMutation({
     mutationFn: async (lessonId: number) => {
-      await apiRequest("POST", `/api/lessons/${lessonId}/complete`);
+      const response = await apiRequest("POST", `/api/lessons/${lessonId}/complete`);
+      return await response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Lesson Completed!",
-        description: "Great job! You've completed this lesson.",
-      });
+    onSuccess: (data: any) => {
+      if (data.courseCompleted) {
+        if (data.certificateIssued) {
+          toast({
+            title: "🎉 Course Completed!",
+            description: "Congratulations! You've completed the entire course and earned your certificate!",
+          });
+        } else {
+          toast({
+            title: "🎉 Course Completed!",
+            description: "Congratulations! You've completed the entire course!",
+          });
+        }
+        // Refresh certificates if one was issued
+        queryClient.invalidateQueries({ queryKey: ["/api/my-certificates"] });
+      } else {
+        toast({
+          title: "Lesson Completed!",
+          description: `Great job! You've completed this lesson. Progress: ${data.progress || 0}%`,
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
       queryClient.invalidateQueries({ queryKey: ["/api/lesson-progress", courseId] });
       queryClient.invalidateQueries({ queryKey: ["/api/my-enrollments"] });
