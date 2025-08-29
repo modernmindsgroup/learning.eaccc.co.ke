@@ -437,27 +437,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Payment routes
   app.post("/api/payments/initialize", isAuthenticated, async (req: any, res) => {
+    console.log("=== PAYMENT INITIALIZATION START ===");
+    console.log("Request body:", req.body);
+    console.log("User ID:", req.user.claims.sub);
+    
     try {
       const { courseId } = req.body;
       const userId = req.user.claims.sub;
 
+      if (!courseId) {
+        console.log("ERROR: No courseId provided");
+        return res.status(400).json({ message: "Course ID is required" });
+      }
+
+      console.log("Getting course details for courseId:", courseId);
       // Get course details
       const course = await storage.getCourse(parseInt(courseId));
       if (!course) {
+        console.log("ERROR: Course not found for ID:", courseId);
         return res.status(404).json({ message: "Course not found" });
       }
+      console.log("Course found:", course.title, "Price:", course.price);
 
       // Check if user is already enrolled
+      console.log("Checking existing enrollment for user:", userId, "course:", courseId);
       const existingEnrollment = await storage.getUserEnrollment(userId, parseInt(courseId));
       if (existingEnrollment) {
+        console.log("ERROR: User already enrolled");
         return res.status(400).json({ message: "Already enrolled in this course" });
       }
+      console.log("No existing enrollment found");
 
       // Get user details
+      console.log("Getting user details for ID:", userId);
       const user = await storage.getUser(userId);
       if (!user || !user.email) {
+        console.log("ERROR: User not found or no email");
         return res.status(400).json({ message: "User email is required for payment" });
       }
+      console.log("User found:", user.email);
 
       // Generate reference
       const reference = `eaccc_${Date.now()}_${courseId}_${userId}`;
