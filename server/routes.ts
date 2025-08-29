@@ -550,7 +550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Redirect to course page
-            res.redirect(`/course/${order.courseId}?payment=success`);
+            res.redirect(`/courses/${order.courseId}?payment=success`);
           } else {
             res.redirect("/?payment=failed");
           }
