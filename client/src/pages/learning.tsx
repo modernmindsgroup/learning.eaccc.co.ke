@@ -197,14 +197,20 @@ export default function Learning() {
   const goToNextLesson = () => {
     if (hasNext && allLessons) {
       const nextLesson = allLessons[currentLessonIndex + 1];
-      goToLesson(nextLesson);
+      // Use direct navigation to avoid 404 flash
+      const nextUrl = `/learn/${courseId}/${nextLesson.id}`;
+      window.history.pushState(null, '', nextUrl);
+      window.location.reload();
     }
   };
 
   const goToPrevLesson = () => {
     if (hasPrev && allLessons) {
       const prevLesson = allLessons[currentLessonIndex - 1];
-      goToLesson(prevLesson);
+      // Use direct navigation to avoid 404 flash
+      const prevUrl = `/learn/${courseId}/${prevLesson.id}`;
+      window.history.pushState(null, '', prevUrl);
+      window.location.reload();
     }
   };
 

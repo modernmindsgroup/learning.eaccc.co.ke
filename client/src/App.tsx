@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import About from "@/pages/about";
 import Courses from "@/pages/courses";
 import CourseDetails from "@/pages/course-details";
 import Learning from "@/pages/learning";
@@ -41,6 +42,7 @@ function Router() {
   return (
     <Switch>
       {/* Public routes - accessible to everyone */}
+      <Route path="/about" component={About} />
       <Route path="/courses" component={Courses} />
       <Route path="/courses/:id" component={CourseDetails} />
       <Route path="/demo/:id" component={Demo} />
