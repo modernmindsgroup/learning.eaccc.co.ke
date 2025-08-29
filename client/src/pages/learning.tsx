@@ -111,6 +111,10 @@ export default function Learning() {
   const completedLessons = allLessons.filter(l => l.completed).length;
   const totalLessons = allLessons.length;
   const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+  
+  // Check if this is the last lesson
+  const isLastLesson = currentLessonIndex === allLessons.length - 1;
+  const isCompleted = currentLesson?.completed || false;
 
   const markCompleteMutation = useMutation({
     mutationFn: async (lessonId: number) => {
@@ -450,18 +454,19 @@ export default function Learning() {
 
             <Button
               onClick={() => markCompleteMutation.mutate(currentLesson.id)}
-              disabled={markCompleteMutation.isPending || currentLesson.completed}
+              disabled={markCompleteMutation.isPending || isCompleted}
               className="bg-white text-eaccc-orange hover:bg-gray-100 px-8 py-3 font-semibold"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
-              {currentLesson.completed ? "Completed ✓" : 
-               markCompleteMutation.isPending ? "Marking Complete..." : "Mark Complete"}
+              {isCompleted ? "Completed ✓" : 
+               markCompleteMutation.isPending ? "Processing..." : 
+               isLastLesson ? "Complete Course" : "Complete Lesson"}
             </Button>
 
             <Button
               variant="ghost"
               onClick={goToNextLesson}
-              disabled={!hasNext}
+              disabled={!hasNext || !isCompleted}
               className="text-white hover:bg-white/10 border border-white/20 px-6 py-3"
             >
               Next Lesson
