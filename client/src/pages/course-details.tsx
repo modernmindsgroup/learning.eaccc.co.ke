@@ -137,11 +137,24 @@ export default function CourseDetails() {
         }, 500);
         return;
       }
-      toast({
-        title: "Payment Failed",
-        description: "There was an error processing your payment.",
-        variant: "destructive",
-      });
+      
+      // Handle specific error cases
+      const errorMessage = error.message || "There was an error processing your payment.";
+      if (errorMessage.includes("already enrolled")) {
+        toast({
+          title: "Already Enrolled",
+          description: "You are already enrolled in this course.",
+          variant: "default",
+        });
+        // Refresh the page to show correct enrollment status
+        queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
+      } else {
+        toast({
+          title: "Payment Failed",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
     },
   });
 

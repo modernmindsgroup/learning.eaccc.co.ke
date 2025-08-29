@@ -322,22 +322,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const hasCertificateForCourse = existingCertificates.some(cert => cert.courseId === lesson.courseId);
             
             if (!hasCertificateForCourse) {
-              await storage.issueCertificate(userId, lesson.courseId);
-              console.log(`Certificate issued for user ${userId} for course ${lesson.courseId}`);
+              const course = await storage.getCourse(lesson.courseId);
+              // Only issue certificates for courses that have certificates enabled
+              if (course?.hasCertificate) {
+                await storage.issueCertificate(userId, lesson.courseId);
+                console.log(`Certificate issued for user ${userId} for course ${lesson.courseId}`);
+              }
             }
           } catch (error) {
             console.error("Error issuing certificate:", error);
             // Don't fail the lesson completion if certificate generation fails
-          }
-        }
-        
-        await storage.updateEnrollmentProgress(userId, lesson.courseId, progress);
-
-        // Issue certificate if course is completed
-        if (progress === 100) {
-          const course = await storage.getCourse(lesson.courseId);
-          if (course?.hasCertificate) {
-            await storage.issueCertificate(userId, lesson.courseId);
           }
         }
       }
@@ -535,10 +529,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Enroll user in course
           if (order.userId && order.courseId) {
-            await storage.enrollUser({
-              userId: order.userId,
-              courseId: order.courseId,
-            });
+            // Check if user is already enrolled (prevent duplicate enrollments)
+            const existingEnrollment = await storage.getUserEnrollment(order.userId, order.courseId);
+            if (!existingEnrollment) {
+              await storage.enrollUser({
+                userId: order.userId,
+                courseId: order.courseId,
+              });
+              console.log(`User ${order.userId} enrolled in course ${order.courseId} after payment`);
+            }
 
             // Redirect to course page
             res.redirect(`/course/${order.courseId}?payment=success`);
@@ -577,10 +576,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Enroll user in course
           if (order.userId && order.courseId) {
-            await storage.enrollUser({
-              userId: order.userId,
-              courseId: order.courseId,
-            });
+            // Check if user is already enrolled (prevent duplicate enrollments)
+            const existingEnrollment = await storage.getUserEnrollment(order.userId, order.courseId);
+            if (!existingEnrollment) {
+              await storage.enrollUser({
+                userId: order.userId,
+                courseId: order.courseId,
+              });
+              console.log(`User ${order.userId} enrolled in course ${order.courseId} after payment verification`);
+            }
 
             res.json({ 
               status: true, 
