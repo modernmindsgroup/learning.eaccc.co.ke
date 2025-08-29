@@ -24,6 +24,20 @@ import Contact from "@/pages/contact";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-eaccc-bg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 bg-eaccc-blue rounded-full flex items-center justify-center mx-auto mb-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
       {/* Public routes - accessible to everyone */}
@@ -46,7 +60,7 @@ function Router() {
       <Route path="/instructor" component={InstructorDashboard} />
       
       {/* Authentication-specific routes */}
-      {isLoading || !isAuthenticated ? (
+      {!isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
