@@ -1,0 +1,43 @@
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+queryClient.ts:32 
+ GET https://da313616-898a-4afb-912c-2f3514e21671-00-2ze93cf3caixb.worf.replit.dev/api/auth/user 401 (Unauthorized)
+﻿
+
