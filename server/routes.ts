@@ -521,17 +521,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/payments/callback", async (req, res) => {
     try {
       const { reference } = req.query;
+      console.log("Payment callback received with reference:", reference);
 
       if (!reference) {
+        console.log("No reference provided, redirecting to failed");
         return res.redirect("/?payment=failed");
       }
 
       // Verify payment
       const verification = await paystackService.verifyPayment(reference as string);
+      console.log("Payment verification result:", verification?.status, verification?.data?.status);
 
       if (verification && verification.status && verification.data.status === "success") {
         // Get order
         const order = await storage.getOrderByReference(reference as string);
+        console.log("Retrieved order:", order ? `Order ${order.id} for course ${order.courseId}` : "Order not found");
         
         if (order) {
           // Update order status
@@ -547,17 +551,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 courseId: order.courseId,
               });
               console.log(`User ${order.userId} enrolled in course ${order.courseId} after payment`);
+            } else {
+              console.log(`User ${order.userId} already enrolled in course ${order.courseId}`);
             }
 
             // Redirect to course page
+            console.log(`Redirecting to course page: /courses/${order.courseId}?payment=success`);
             res.redirect(`/courses/${order.courseId}?payment=success`);
           } else {
+            console.log("Order missing userId or courseId, redirecting to failed");
             res.redirect("/?payment=failed");
           }
         } else {
+          console.log("Order not found for reference, redirecting to failed");
           res.redirect("/?payment=failed");
         }
       } else {
+        console.log("Payment verification failed, redirecting to failed");
         res.redirect("/?payment=failed");
       }
     } catch (error) {
