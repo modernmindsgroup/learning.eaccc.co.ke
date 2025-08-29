@@ -519,61 +519,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/payments/callback", async (req, res) => {
+    console.log("=== PAYMENT CALLBACK START ===");
+    console.log("Request query:", req.query);
+    
     try {
       const { reference } = req.query;
       console.log("Payment callback received with reference:", reference);
 
       if (!reference) {
-        console.log("No reference provided, redirecting to failed");
-        return res.redirect("/?payment=failed");
+        console.log("ERROR: No reference provided, redirecting to failed");
+        return res.redirect("/?payment=failed&error=no-reference");
       }
 
+      console.log("Starting payment verification...");
       // Verify payment
       const verification = await paystackService.verifyPayment(reference as string);
-      console.log("Payment verification result:", verification?.status, verification?.data?.status);
+      console.log("Payment verification complete:", verification);
 
       if (verification && verification.status && verification.data.status === "success") {
+        console.log("Payment verified successfully, getting order...");
         // Get order
         const order = await storage.getOrderByReference(reference as string);
-        console.log("Retrieved order:", order ? `Order ${order.id} for course ${order.courseId}` : "Order not found");
+        console.log("Order retrieval result:", order);
         
         if (order) {
+          console.log(`Found order ${order.id} for user ${order.userId} and course ${order.courseId}`);
+          
           // Update order status
           await storage.updateOrderStatus(order.id, "completed", reference as string);
+          console.log("Order status updated to completed");
 
           // Enroll user in course
           if (order.userId && order.courseId) {
+            console.log("Checking existing enrollment...");
             // Check if user is already enrolled (prevent duplicate enrollments)
             const existingEnrollment = await storage.getUserEnrollment(order.userId, order.courseId);
+            console.log("Existing enrollment check:", existingEnrollment ? "Found" : "Not found");
+            
             if (!existingEnrollment) {
+              console.log("Creating enrollment...");
               await storage.enrollUser({
                 userId: order.userId,
                 courseId: order.courseId,
               });
-              console.log(`User ${order.userId} enrolled in course ${order.courseId} after payment`);
+              console.log(`SUCCESS: User ${order.userId} enrolled in course ${order.courseId} after payment`);
             } else {
-              console.log(`User ${order.userId} already enrolled in course ${order.courseId}`);
+              console.log(`INFO: User ${order.userId} already enrolled in course ${order.courseId}`);
             }
 
             // Redirect to course page
-            console.log(`Redirecting to course page: /courses/${order.courseId}?payment=success`);
-            res.redirect(`/courses/${order.courseId}?payment=success`);
+            const redirectUrl = `/courses/${order.courseId}?payment=success`;
+            console.log(`SUCCESS: Redirecting to course page: ${redirectUrl}`);
+            res.redirect(redirectUrl);
           } else {
-            console.log("Order missing userId or courseId, redirecting to failed");
-            res.redirect("/?payment=failed");
+            console.log("ERROR: Order missing userId or courseId");
+            res.redirect("/?payment=failed&error=invalid-order");
           }
         } else {
-          console.log("Order not found for reference, redirecting to failed");
-          res.redirect("/?payment=failed");
+          console.log("ERROR: Order not found for reference");
+          res.redirect("/?payment=failed&error=order-not-found");
         }
       } else {
-        console.log("Payment verification failed, redirecting to failed");
-        res.redirect("/?payment=failed");
+        console.log("ERROR: Payment verification failed");
+        res.redirect("/?payment=failed&error=verification-failed");
       }
     } catch (error) {
-      console.error("Payment callback error:", error);
-      res.redirect("/?payment=failed");
+      console.error("CRITICAL ERROR in payment callback:", error);
+      res.redirect("/?payment=failed&error=server-error");
     }
+    
+    console.log("=== PAYMENT CALLBACK END ===");
   });
 
   app.post("/api/payments/verify", isAuthenticated, async (req: any, res) => {
