@@ -25,7 +25,7 @@ export default function HeroSection() {
             </Button>
             <Button
               variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-eaccc-blue px-8 py-4 text-lg font-semibold"
+              className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-eaccc-blue px-8 py-4 text-lg font-semibold"
               onClick={() => window.location.href = "/about"}
             >
               Learn More
