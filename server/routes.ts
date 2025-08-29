@@ -464,15 +464,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create order record
       console.log("Creating order with reference:", reference);
-      const order = await storage.createOrder({
-        userId,
-        courseId: parseInt(courseId),
-        amount: course.price || "0",
-        currency: "USD",
-        status: "pending",
-        paystackReference: reference,
-      });
-      console.log("Order created successfully:", order.id, "with reference:", order.paystackReference);
+      let order;
+      try {
+        order = await storage.createOrder({
+          userId,
+          courseId: parseInt(courseId),
+          amount: course.price || "0",
+          currency: "USD",
+          status: "pending",
+          paystackReference: reference,
+        });
+        console.log("Order created successfully:", order.id, "with reference:", order.paystackReference);
+      } catch (orderError) {
+        console.error("CRITICAL: Order creation failed:", orderError);
+        return res.status(500).json({ message: "Failed to create order", error: orderError.message });
+      }
 
       // Initialize payment with Paystack
       const paymentData = {
