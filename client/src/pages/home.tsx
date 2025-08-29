@@ -30,15 +30,15 @@ export default function Home() {
     <div className="min-h-screen bg-eaccc-bg">
       <Header />
       
-      {/* Welcome Section */}
+      {/* Hero Section */}
       <section className="bg-gradient-to-r from-eaccc-blue to-blue-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">
-              Welcome back, {user?.firstName || 'Learner'}!
+              Empowering Africa Through Skills and Service Excellence
             </h1>
             <p className="text-xl text-blue-100 mb-8">
-              Continue your journey to excellence in customer service and professional development.
+              Join thousands of learners across East Africa in developing world-class customer service and professional skills.
             </p>
             <Button 
               className="bg-eaccc-orange hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold"
