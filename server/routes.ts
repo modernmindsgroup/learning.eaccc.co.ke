@@ -475,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize payment with Paystack
       const paymentData = {
         email: user.email!,
-        amount: parseFloat(course.price || "0") * 100, // Convert to cents
+        amount: Math.round(parseFloat(course.price || "0") * 100), // Convert to cents and round to integer
         reference,
         callback_url: `${req.protocol}://${req.get('host')}/api/payments/callback`,
         metadata: {
