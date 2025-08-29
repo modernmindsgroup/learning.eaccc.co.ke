@@ -8,13 +8,12 @@ export default function Footer() {
           
           {/* Company Info */}
           <div className="col-span-1 md:col-span-2">
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex items-center mb-4">
               <img 
                 src="/attached_assets/East Africa_1756481469423.png" 
-                alt="EACCC Logo" 
-                className="h-8 w-auto"
+                alt="EACCC - East Africa Customer Care Center Ltd" 
+                className="h-16 w-auto"
               />
-              <span className="text-xl font-semibold">EACCC Learning</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Empowering African professionals with world-class customer service and business skills training. 

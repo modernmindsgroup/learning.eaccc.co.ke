@@ -33,13 +33,12 @@ export default function Header() {
           
           {/* Logo Section */}
           <div className="flex items-center space-x-4">
-            <a href="/" className="flex items-center space-x-2">
+            <a href="/" className="flex items-center">
               <img 
                 src="/attached_assets/East Africa_1756481469423.png" 
-                alt="EACCC Logo" 
-                className="h-8 w-auto"
+                alt="EACCC - East Africa Customer Care Center Ltd" 
+                className="h-12 w-auto"
               />
-              <span className="text-xl font-semibold text-eaccc-blue">EACCC Learning</span>
             </a>
           </div>
 
