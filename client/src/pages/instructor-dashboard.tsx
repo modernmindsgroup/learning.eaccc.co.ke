@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -56,31 +57,33 @@ interface StudentProgress {
 }
 
 export default function InstructorDashboard() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Check if user is instructor or admin
-  if (!isAuthenticated || !["instructor", "admin"].includes(user?.role || "")) {
+  // Redirect to instructor login if not authenticated or not instructor/admin
+  useEffect(() => {
+    if (!isLoading && (!isAuthenticated || !["instructor", "admin"].includes(user?.role || ""))) {
+      setLocation("/instructor/login");
+    }
+  }, [isAuthenticated, user?.role, isLoading, setLocation]);
+
+  // Show loading while checking auth
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center">
-            <GraduationCap className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="text-gray-600">
-              You don't have permission to access the instructor dashboard.
-            </p>
-            <Button 
-              className="mt-4"
-              onClick={() => window.location.href = "/"}
-            >
-              Return Home
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <GraduationCap className="h-8 w-8 animate-spin mx-auto mb-2 text-green-600" />
+          <p>Loading...</p>
+        </div>
       </div>
     );
+  }
+
+  // Don't render if not authorized (will redirect)
+  if (!isAuthenticated || !["instructor", "admin"].includes(user?.role || "")) {
+    return null;
   }
 
   // Fetch instructor data
