@@ -34,9 +34,11 @@ export default function Header() {
           {/* Logo Section */}
           <div className="flex items-center space-x-4">
             <a href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-eaccc-blue rounded-full flex items-center justify-center">
-                <GraduationCap className="h-5 w-5 text-white" />
-              </div>
+              <img 
+                src="/attached_assets/East Africa_1756481469423.png" 
+                alt="EACCC Logo" 
+                className="h-8 w-auto"
+              />
               <span className="text-xl font-semibold text-eaccc-blue">EACCC Learning</span>
             </a>
           </div>
