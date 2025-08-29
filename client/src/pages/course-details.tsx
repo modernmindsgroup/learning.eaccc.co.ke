@@ -484,7 +484,7 @@ export default function CourseDetails() {
                     {canStartLearning && (
                       <Button 
                         className="w-full bg-[#0097D7] hover:bg-[#0097D7]/90 text-white"
-                        onClick={() => window.location.href = `/learning/${course.id}`}
+                        onClick={() => window.location.href = `/learn/${course.id}`}
                         data-testid="button-continue-learning"
                       >
                         <Play className="mr-2 h-4 w-4" />
