@@ -109,11 +109,24 @@ export class PaystackService {
 
   async verifyPayment(reference: string): Promise<VerificationResponse> {
     try {
+      console.log("Verifying payment with reference:", reference);
       const response = await paystackClient.transaction.verify(reference);
-      return response.body as VerificationResponse;
+      console.log("Verification response:", response);
+      console.log("Verification response.body:", response.body);
+      console.log("Verification response.status:", response.status);
+      
+      // Handle both possible response formats like in initialization
+      const responseData = response.body || response;
+      console.log("Verification responseData:", responseData);
+      
+      if (responseData && typeof responseData === 'object') {
+        return responseData as VerificationResponse;
+      }
+      
+      throw new Error("Invalid verification response format from Paystack");
     } catch (error) {
       console.error("Paystack verification error:", error);
-      throw new Error("Failed to verify payment");
+      throw error;
     }
   }
 
