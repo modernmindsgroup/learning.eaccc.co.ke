@@ -45,7 +45,6 @@ export default function Header() {
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Courses", href: "/courses" },
-    { name: "Instructors", href: "/instructors" },
     ...(isAuthenticated ? [{ name: "Dashboard", href: "/dashboard" }] : []),
     { name: "Contact", href: "/contact" },
   ];
