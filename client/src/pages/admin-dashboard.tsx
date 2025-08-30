@@ -51,6 +51,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional logic
   const { isAuthenticated, isLoading, username } = useAdminAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
@@ -71,45 +72,25 @@ export default function AdminDashboard() {
     expertise: ""
   });
 
-  // Redirect to admin login if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      setLocation("/admin/login");
-    }
-  }, [isAuthenticated, isLoading, setLocation]);
-
-  // Show loading while checking auth
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Crown className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-          <p>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render if not authorized (will redirect)
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // Fetch dashboard data
+  // Fetch dashboard data (call hooks before any conditional returns)
   const { data: stats } = useQuery<DashboardStats>({
     queryKey: ["/api/admin/stats"],
+    enabled: isAuthenticated, // Only fetch when authenticated
   });
 
   const { data: users } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
+    enabled: isAuthenticated,
   });
 
   const { data: courses } = useQuery<Course[]>({
     queryKey: ["/api/admin/courses"],
+    enabled: isAuthenticated,
   });
 
   const { data: instructors } = useQuery<Instructor[]>({
     queryKey: ["/api/admin/instructors"],
+    enabled: isAuthenticated,
   });
 
   // Create course mutation
@@ -199,6 +180,30 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Redirect to admin login if not authenticated (AFTER all hooks are called)
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      setLocation("/admin/login");
+    }
+  }, [isAuthenticated, isLoading, setLocation]);
+
+  // Show loading while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Crown className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authorized (will redirect)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
