@@ -886,7 +886,7 @@ export default function AdminDashboard() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleEditCourse(course)}
+                              onClick={() => openEditCourse(course)}
                               data-testid={`button-edit-course-${course.id}`}
                             >
                               <Edit className="h-4 w-4" />
@@ -894,7 +894,7 @@ export default function AdminDashboard() {
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => handleDeleteCourse(course.id)}
+                              onClick={() => deleteCourseMutation.mutate(course.id)}
                               data-testid={`button-delete-course-${course.id}`}
                             >
                               <Trash2 className="h-4 w-4" />
