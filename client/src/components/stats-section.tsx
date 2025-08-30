@@ -66,15 +66,15 @@ export default function StatsSection() {
                   <stat.icon className="h-10 w-10 text-white drop-shadow-sm" />
                 </div>
                 
-                <h3 className="font-heading text-4xl font-black text-gray-900 mb-3 group-hover:text-gradient transition-all duration-300">
+                <h3 className="font-heading text-4xl font-bold text-gray-900 mb-2 group-hover:text-gradient transition-all duration-300">
                   {stat.value}
                 </h3>
                 
-                <h4 className="font-heading font-bold text-lg text-gray-800 mb-3 tracking-tight">
+                <h4 className="font-heading font-semibold text-base text-gray-800 mb-2">
                   {stat.title}
                 </h4>
                 
-                <p className="text-sm text-gray-600/80 leading-relaxed font-medium">
+                <p className="text-sm text-gray-500 leading-relaxed font-normal">
                   {stat.description}
                 </p>
               </CardContent>

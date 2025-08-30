@@ -31,49 +31,64 @@ export default function Home() {
     <div className="min-h-screen bg-eaccc-bg">
       <Header />
       
-      {/* Hero Section with learner image background */}
+      {/* Hero Section with professional learner image background */}
       <section 
         className="relative bg-cover bg-center bg-no-repeat text-white overflow-hidden"
         style={{
-          backgroundImage: `url('/attached_assets/generated_images/African_learners_studying_together_7d5857c2.png')`
+          backgroundImage: `url('/attached_assets/generated_images/Professional_African_learners_training_60ebf2af.png')`
         }}
       >
         {/* Enhanced gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-blue-900/70"></div>
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-900/70 via-gray-800/60 to-blue-900/50"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-40">
-          <div className="max-w-4xl">
-            <h1 className="font-heading text-5xl lg:text-7xl font-extrabold leading-tight mb-8 tracking-tight">
-              <span className="block">Empowering Africa</span>
-              <span className="block text-gradient bg-gradient-to-r from-white to-blue-100">Through Excellence</span>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="font-heading text-4xl lg:text-6xl font-bold leading-tight mb-6 tracking-normal">
+              Empowering Learning Through Excellence
             </h1>
-            <p className="text-xl lg:text-2xl mb-10 text-white/90 font-medium leading-relaxed max-w-3xl">
-              Join thousands of learners across East Africa in developing world-class customer service and professional skills with our cutting-edge learning platform.
+            <p className="text-lg lg:text-xl mb-8 text-white/80 font-normal leading-relaxed max-w-3xl mx-auto">
+              We are dedicated to transforming the way individuals and organizations learn. Our e-learning platform offers dynamic training programs and resources designed to enhance skills, foster growth, and drive success. Join us in redefining the learning experience with our engaging content and expert-led courses that cater to all levels.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6 pt-4">
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="relative">
+                <input 
+                  type="text"
+                  placeholder="Search courses, instructors and organizations..."
+                  className="w-full px-6 py-4 text-gray-700 bg-white/95 backdrop-blur-sm rounded-full border-0 shadow-soft focus:outline-none focus:ring-4 focus:ring-white/30 text-base font-medium"
+                />
+                <Button 
+                  className="absolute right-2 top-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-2 rounded-full font-semibold transition-all duration-300"
+                >
+                  Search
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-5 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-soft transition-all duration-300 hover:shadow-hover hover:-translate-y-1"
                 onClick={() => window.location.href = "/courses"}
               >
-                <BookOpen className="mr-3 h-6 w-6" />
+                <BookOpen className="mr-2 h-5 w-5" />
                 Browse Courses
               </Button>
               <Button
                 variant="outline"
-                className="border-2 border-white/60 text-white bg-white/10 hover:bg-white hover:text-gray-900 px-10 py-5 text-lg font-bold rounded-2xl backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                className="border-2 border-white/60 text-white bg-white/10 hover:bg-white hover:text-gray-900 px-8 py-4 text-lg font-semibold rounded-2xl backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                 onClick={() => window.location.href = "/about"}
               >
                 Learn More
               </Button>
-              <Button 
-                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-10 py-5 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
-                onClick={() => window.location.href = "/dashboard"}
-              >
-                <BookOpen className="mr-3 h-6 w-6" />
-                Go to Dashboard
-              </Button>
+              {user && (
+                <Button 
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold rounded-2xl shadow-soft transition-all duration-300 hover:shadow-hover hover:-translate-y-1"
+                  onClick={() => window.location.href = "/dashboard"}
+                >
+                  <BookOpen className="mr-2 h-5 w-5" />
+                  Go to Dashboard
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -144,11 +159,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <BookOpen className="h-8 w-8 text-white" />
                   </div>
-                  <span className="font-heading font-bold text-lg text-gray-800">Enrolled Courses</span>
+                  <span className="font-heading font-semibold text-base text-gray-800">Enrolled Courses</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-heading text-4xl font-black text-blue-600 group-hover:text-gradient transition-all duration-300">{enrollments?.length || 0}</p>
+                <p className="font-heading text-4xl font-bold text-blue-600 group-hover:text-gradient transition-all duration-300">{enrollments?.length || 0}</p>
               </CardContent>
             </Card>
 
@@ -158,11 +173,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Award className="h-8 w-8 text-white" />
                   </div>
-                  <span className="font-heading font-bold text-lg text-gray-800">Certificates Earned</span>
+                  <span className="font-heading font-semibold text-base text-gray-800">Certificates Earned</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-heading text-4xl font-black text-green-600 group-hover:text-gradient transition-all duration-300">{certificates?.length || 0}</p>
+                <p className="font-heading text-4xl font-bold text-green-600 group-hover:text-gradient transition-all duration-300">{certificates?.length || 0}</p>
               </CardContent>
             </Card>
 
@@ -172,11 +187,11 @@ export default function Home() {
                   <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                     <Clock className="h-8 w-8 text-white" />
                   </div>
-                  <span className="font-heading font-bold text-lg text-gray-800">Completed Courses</span>
+                  <span className="font-heading font-semibold text-base text-gray-800">Completed Courses</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="font-heading text-4xl font-black text-orange-600 group-hover:text-gradient transition-all duration-300">
+                <p className="font-heading text-4xl font-bold text-orange-600 group-hover:text-gradient transition-all duration-300">
                   {enrollments?.filter(e => e.progress === 100).length || 0}
                 </p>
               </CardContent>
@@ -189,8 +204,8 @@ export default function Home() {
       <section className="bg-gradient-to-br from-white via-purple-50/20 to-blue-50/30 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
-            <h2 className="font-heading text-4xl font-black text-gray-900 tracking-tight">Explore New Courses</h2>
-            <a href="/courses" className="group flex items-center text-eaccc-blue hover:text-blue-700 font-bold text-lg transition-all duration-300">
+            <h2 className="font-heading text-3xl font-bold text-gray-900 tracking-normal">Explore New Courses</h2>
+            <a href="/courses" className="group flex items-center text-eaccc-blue hover:text-blue-700 font-semibold text-base transition-all duration-300">
               View All 
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
             </a>
@@ -220,28 +235,25 @@ export default function Home() {
             </div>
             
             <div className="space-y-6">
-              <h2 className="font-heading text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                Have a Question? <br />
-                <span className="text-gradient bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Ask it in forum and get answer
-                </span>
+              <h2 className="font-heading text-3xl lg:text-4xl font-bold text-gray-900 tracking-normal leading-tight">
+                Have a Question? Ask it in<br />
+                forum and get answer
               </h2>
               
-              <p className="text-lg text-gray-600 leading-relaxed font-medium">
+              <p className="text-base text-gray-500 leading-relaxed font-normal">
                 Our forums helps you to create your questions on different subjects and communicate with other forum users. Our users will help you to get the best answer!
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button 
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-soft transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                   onClick={() => window.location.href = "/forum/create"}
                 >
-                  <MessageSquare className="mr-3 h-5 w-5" />
                   Create a new topic
                 </Button>
                 <Button 
                   variant="outline"
-                  className="border-2 border-cyan-200 text-cyan-600 hover:bg-cyan-50 px-8 py-4 text-lg font-bold rounded-2xl transition-all duration-300 hover:shadow-md"
+                  className="border-2 border-cyan-200 text-cyan-600 hover:bg-cyan-50 px-6 py-3 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-md"
                   onClick={() => window.location.href = "/forum"}
                 >
                   Browse forums
@@ -257,13 +269,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 space-y-6">
-              <h2 className="font-heading text-4xl lg:text-5xl font-black text-gray-900 tracking-tight leading-tight">
-                <span className="text-gradient bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                  Win Club Points
-                </span>
+              <h2 className="font-heading text-3xl lg:text-4xl font-bold text-gray-900 tracking-normal leading-tight">
+                Win Club Points
               </h2>
               
-              <p className="text-lg text-gray-600 leading-relaxed font-medium">
+              <p className="text-base text-gray-500 leading-relaxed font-normal">
                 Use our platform and win club points according to different activities. You will be able to use your club points to get free prizes and courses. Start using the system now and collect points!
               </p>
               
@@ -273,23 +283,22 @@ export default function Home() {
                     <Trophy className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900">You earned 50 points!</p>
-                    <p className="text-sm text-gray-600">For completing this course</p>
+                    <p className="font-semibold text-gray-900">You earned 50 points!</p>
+                    <p className="text-sm text-gray-500">for completing the course...</p>
                   </div>
                 </div>
               </div>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
                 <Button 
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-8 py-4 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-soft transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                   onClick={() => window.location.href = "/rewards"}
                 >
-                  <Trophy className="mr-3 h-5 w-5" />
                   Rewards
                 </Button>
                 <Button 
                   variant="outline"
-                  className="border-2 border-blue-200 text-blue-600 hover:bg-blue-50 px-8 py-4 text-lg font-bold rounded-2xl transition-all duration-300 hover:shadow-md"
+                  className="border-2 border-blue-200 text-blue-600 hover:bg-blue-50 px-6 py-3 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-md"
                   onClick={() => window.location.href = "/points"}
                 >
                   Points Club
@@ -336,17 +345,17 @@ export default function Home() {
                 </div>
                 
                 <div className="flex-1 space-y-4">
-                  <h3 className="font-heading text-2xl font-black text-gray-900">
+                  <h3 className="font-heading text-xl font-bold text-gray-900">
                     <span className="text-orange-600">Validate</span><br />
                     <span className="text-gray-500">Certificates</span>
                   </h3>
                   
-                  <p className="text-gray-600 font-medium leading-relaxed">
+                  <p className="text-gray-500 font-normal leading-relaxed text-sm">
                     Verify the authenticity of certificates issued by our platform.
                   </p>
                   
                   <Button 
-                    className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg"
+                    className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg"
                     onClick={() => window.location.href = "/validate-certificate"}
                   >
                     Validate Now
@@ -367,17 +376,17 @@ export default function Home() {
                 </div>
                 
                 <div className="flex-1 space-y-4">
-                  <h3 className="font-heading text-2xl font-black text-gray-900">
+                  <h3 className="font-heading text-xl font-bold text-gray-900">
                     <span className="text-purple-600">Reserve a</span><br />
                     <span className="text-gray-500">Live meeting</span>
                   </h3>
                   
-                  <p className="text-gray-600 font-medium leading-relaxed">
+                  <p className="text-gray-500 font-normal leading-relaxed text-sm">
                     Schedule one-on-one sessions with our expert instructors.
                   </p>
                   
                   <Button 
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white px-5 py-2 rounded-xl font-semibold text-sm transition-all duration-300 hover:shadow-lg"
                     onClick={() => window.location.href = "/book-meeting"}
                   >
                     Reserve Now

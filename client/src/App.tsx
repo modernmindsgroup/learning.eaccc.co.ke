@@ -61,12 +61,12 @@ function Router() {
       {/* Instructor Dashboard - requires instructor or admin role */}
       <Route path="/instructor" component={InstructorDashboard} />
       
-      {/* Authentication-specific routes */}
-      {!isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
+      {/* Home route - accessible to everyone */}
+      <Route path="/" component={Home} />
+      
+      {/* Protected routes - require authentication */}
+      {isAuthenticated && (
         <>
-          <Route path="/" component={Home} />
           <Route path="/learn/:courseId/:lessonId?" component={Learning} />
           <Route path="/dashboard" component={Dashboard} />
         </>
