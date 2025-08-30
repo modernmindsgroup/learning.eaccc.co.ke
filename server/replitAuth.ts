@@ -144,7 +144,7 @@ export async function setupAuth(app: Express) {
               } else {
                 const redirectUrl = localStorage.getItem('redirectAfterLogin');
                 localStorage.removeItem('redirectAfterLogin');
-                window.location.href = redirectUrl || '/';
+                window.location.href = redirectUrl || '/dashboard';
               }
             </script>
           </body>
