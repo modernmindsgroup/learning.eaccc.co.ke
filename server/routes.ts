@@ -948,6 +948,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/instructor/:id", requireAdminSession, async (req, res) => {
+    try {
+      const instructorId = parseInt(req.params.id);
+      const instructor = await storage.getInstructor(instructorId);
+      
+      if (!instructor) {
+        return res.status(404).json({ message: "Instructor not found" });
+      }
+      
+      res.json(instructor);
+    } catch (error) {
+      console.error("Get instructor error:", error);
+      res.status(500).json({ message: "Failed to fetch instructor" });
+    }
+  });
+
   app.put("/api/admin/users/:id/role", requireAdminSession, async (req, res) => {
     try {
       const userId = req.params.id;

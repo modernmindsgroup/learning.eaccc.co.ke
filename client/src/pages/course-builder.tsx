@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Course, Topic, Lesson } from "@shared/schema";
+import type { Course, Topic, Lesson, Instructor } from "@shared/schema";
 
 interface TopicWithLessons extends Topic {
   lessons: Lesson[];
@@ -35,6 +35,12 @@ export default function CourseBuilderPage() {
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
     queryKey: ["/api/admin/course", courseId],
     enabled: !!courseId,
+  });
+
+  // Fetch instructor data
+  const { data: instructor, isLoading: instructorLoading } = useQuery<Instructor>({
+    queryKey: ["/api/admin/instructor", course?.instructorId],
+    enabled: !!course?.instructorId,
   });
 
   // Fetch topics with lessons
@@ -257,7 +263,7 @@ export default function CourseBuilderPage() {
     );
   }
 
-  if (courseLoading || topicsLoading) {
+  if (courseLoading || topicsLoading || instructorLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center">
         <div className="flex items-center gap-2">
@@ -273,13 +279,13 @@ export default function CourseBuilderPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
                 Course Builder
               </h1>
               <p className="text-gray-600 text-lg">
-                {course?.title || "Loading course..."}
+                Build and organize your course content
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -297,6 +303,91 @@ export default function CourseBuilderPage() {
               </Button>
             </div>
           </div>
+          
+          {/* Course Information Card */}
+          {course && (
+            <Card className="mb-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="text-2xl text-[#0097D7] font-bold">
+                  {course.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Instructor</Label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {instructor ? instructor.name : `Instructor ${course.instructorId}`}
+                    </p>
+                    {instructor?.expertise && (
+                      <p className="text-sm text-gray-600 mt-1">{instructor.expertise}</p>
+                    )}
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Price</Label>
+                    <div className="mt-1">
+                      {course.isFree ? (
+                        <Badge variant="secondary" className="text-lg px-3 py-1">
+                          FREE
+                        </Badge>
+                      ) : (
+                        <p className="text-lg font-bold text-[#F7941D]">
+                          ${course.price}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Category</Label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {course.category || "General"}
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600">Difficulty</Label>
+                    <p className="text-lg font-semibold text-gray-900 mt-1">
+                      {course.level || "Beginner"}
+                    </p>
+                  </div>
+                </div>
+                
+                {course.description && (
+                  <div className="mt-6">
+                    <Label className="text-sm font-medium text-gray-600">Description</Label>
+                    <p className="text-gray-800 mt-2 leading-relaxed">
+                      {course.description}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex gap-4 mt-6">
+                  {course.hasQuiz && (
+                    <Badge variant="outline" className="border-[#34A853] text-[#34A853]">
+                      Has Quiz
+                    </Badge>
+                  )}
+                  {course.hasCertificate && (
+                    <Badge variant="outline" className="border-[#F7941D] text-[#F7941D]">
+                      Has Certificate
+                    </Badge>
+                  )}
+                  {course.isFeatured && (
+                    <Badge variant="outline" className="border-[#0097D7] text-[#0097D7]">
+                      Featured
+                    </Badge>
+                  )}
+                  {course.isBestseller && (
+                    <Badge variant="outline" className="border-purple-600 text-purple-600">
+                      Bestseller
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           {/* Course stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
