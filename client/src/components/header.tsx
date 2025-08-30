@@ -37,7 +37,7 @@ export default function Header() {
               <img 
                 src="/attached_assets/East Africa_1756481469423.png" 
                 alt="EACCC - East Africa Customer Care Center Ltd" 
-                className="h-24 w-auto"
+                className="h-28 w-auto"
               />
             </a>
           </div>
