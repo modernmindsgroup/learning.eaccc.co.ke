@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { requireAdmin, requireInstructor, requireInstructorOrAdmin } from "./auth";
+import { ObjectStorageService } from "./objectStorage";
 import { 
   insertCourseSchema, 
   insertTopicSchema,
@@ -1206,6 +1207,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error reordering lessons:", error);
       res.status(500).json({ message: "Failed to reorder lessons" });
+    }
+  });
+
+  // Video Upload Routes (Admin only)
+  app.post("/api/admin/videos/upload-url", requireAdminSession, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getVideoUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting video upload URL:", error);
+      res.status(500).json({ message: "Failed to get video upload URL" });
+    }
+  });
+
+  app.put("/api/admin/videos/:videoUrl", requireAdminSession, async (req, res) => {
+    try {
+      const videoUrl = decodeURIComponent(req.params.videoUrl);
+      const objectStorageService = new ObjectStorageService();
+      
+      // Normalize the video URL to get the object path
+      const objectPath = objectStorageService.normalizeObjectEntityPath(videoUrl);
+      
+      res.json({
+        videoUrl: objectPath,
+        message: "Video uploaded successfully"
+      });
+    } catch (error) {
+      console.error("Error processing video upload:", error);
+      res.status(500).json({ message: "Failed to process video upload" });
     }
   });
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, GripVertical, ChevronDown, ChevronRight, Edit2, Trash2, Copy, Eye, Lock, Play, CheckCircle } from "lucide-react";
+import { Loader2, Plus, GripVertical, ChevronDown, ChevronRight, Edit2, Trash2, Copy, Eye, Lock, Play, CheckCircle, Upload, Link, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,9 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ObjectUploader } from "@/components/ObjectUploader";
 import type { Course, Topic, Lesson, Instructor } from "@shared/schema";
+import type { UploadResult } from "@uppy/core";
 
 interface TopicWithLessons extends Topic {
   lessons: Lesson[];
@@ -28,8 +31,16 @@ export default function CourseBuilderPage() {
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
+  const [videoInputMethod, setVideoInputMethod] = useState<"url" | "upload">("url");
+  const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Reset lesson dialog state
+  const resetLessonDialog = () => {
+    setVideoInputMethod("url");
+    setUploadedVideoUrl("");
+  };
 
   // Fetch course data
   const { data: course, isLoading: courseLoading } = useQuery<Course>({
@@ -135,6 +146,7 @@ export default function CourseBuilderPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
       setLessonDialogOpen(false);
+      resetLessonDialog();
       toast({ title: "Success", description: "Lesson created successfully" });
     },
     onError: () => {
@@ -190,21 +202,25 @@ export default function CourseBuilderPage() {
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
-    const videoUrl = formData.get("videoUrl") as string;
+    const urlInput = formData.get("videoUrl") as string;
     const duration = parseInt(formData.get("duration") as string) || 0;
     
     if (!title.trim()) return;
+
+    // Determine which video URL to use based on input method
+    const videoUrl = videoInputMethod === "upload" ? uploadedVideoUrl : urlInput?.trim();
 
     createLessonMutation.mutate({
       topicId: selectedTopic.id,
       lessonData: {
         title: title.trim(),
         description: description?.trim(),
-        videoUrl: videoUrl?.trim(),
+        videoUrl: videoUrl || "",
         duration: duration.toString(),
         isPreview: formData.get("isPreview") === "on",
         isRequired: formData.get("isRequired") === "on",
         completeOnVideoEnd: formData.get("completeOnVideoEnd") === "on",
+        orderIndex: selectedTopic.lessons?.length || 0,
       },
     });
   };
@@ -872,13 +888,78 @@ export default function CourseBuilderPage() {
               </div>
               
               <div>
-                <Label htmlFor="lesson-video">Video URL</Label>
-                <Input
-                  id="lesson-video"
-                  name="videoUrl"
-                  placeholder="https://..."
-                  data-testid="input-new-lesson-video"
-                />
+                <Label>Video Content</Label>
+                <Tabs value={videoInputMethod} onValueChange={(value) => setVideoInputMethod(value as "url" | "upload")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="url" className="flex items-center gap-2">
+                      <Link className="h-4 w-4" />
+                      Video URL
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Upload Video
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="url" className="mt-4">
+                    <Input
+                      id="lesson-video"
+                      name="videoUrl"
+                      placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                      data-testid="input-new-lesson-video"
+                    />
+                    <p className="text-sm text-gray-600 mt-2">
+                      Enter a YouTube, Vimeo, or direct video URL
+                    </p>
+                  </TabsContent>
+                  
+                  <TabsContent value="upload" className="mt-4">
+                    <div className="space-y-4">
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={104857600} // 100MB
+                        allowedFileTypes={['.mp4', '.mov', '.avi', '.wmv', '.flv', '.webm', '.mkv']}
+                        onGetUploadParameters={async () => {
+                          const response = await apiRequest("POST", "/api/admin/videos/upload-url");
+                          const data = await response.json();
+                          return {
+                            method: "PUT" as const,
+                            url: data.uploadURL,
+                          };
+                        }}
+                        onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                          if (result.successful && result.successful.length > 0) {
+                            const uploadedFile = result.successful[0];
+                            const videoUrl = uploadedFile.uploadURL;
+                            setUploadedVideoUrl(videoUrl || "");
+                            toast({
+                              title: "Video uploaded successfully",
+                              description: "Your video is ready to use in the lesson.",
+                            });
+                          }
+                        }}
+                        buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Video className="h-4 w-4" />
+                          <span>Choose Video File</span>
+                        </div>
+                      </ObjectUploader>
+                      
+                      {uploadedVideoUrl && (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                          <p className="text-sm text-green-800">
+                            ✓ Video uploaded successfully and ready to use
+                          </p>
+                        </div>
+                      )}
+                      
+                      <p className="text-sm text-gray-600">
+                        Supported formats: MP4, MOV, AVI, WMV, FLV, WebM, MKV (max 100MB)
+                      </p>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
 
               <div className="flex items-center gap-6">
@@ -921,7 +1002,10 @@ export default function CourseBuilderPage() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setLessonDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => {
+                  setLessonDialogOpen(false);
+                  resetLessonDialog();
+                }}>
                   Cancel
                 </Button>
                 <Button type="submit" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-create-lesson">
