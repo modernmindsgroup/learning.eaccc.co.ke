@@ -33,23 +33,32 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      // Check credentials
-      if (credentials.username === ADMIN_CREDENTIALS.username && 
-          credentials.password === ADMIN_CREDENTIALS.password) {
-        
-        // Redirect to main login to get proper authentication
+      // Use the new standalone admin authentication
+      const response = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: credentials.username,
+          password: credentials.password
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
         toast({
-          title: "Admin Access Verified",
-          description: "Redirecting to secure login...",
+          title: "Welcome Admin!",
+          description: "Successfully logged into admin portal",
         });
         
-        // Use the main Replit auth system but redirect to admin after
-        sessionStorage.setItem('admin_login_redirect', 'true');
-        window.location.href = "/api/login";
+        // Direct redirect to admin dashboard (no Replit auth needed)
+        setLocation("/admin");
       } else {
         toast({
           title: "Invalid Credentials",
-          description: "Please check your username and password.",
+          description: result.message || "Please check your username and password.",
           variant: "destructive",
         });
       }

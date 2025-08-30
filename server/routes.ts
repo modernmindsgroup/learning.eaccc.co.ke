@@ -837,8 +837,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Authentication Routes (standalone - no Replit auth conflict)
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Verify admin credentials
+      const ADMIN_CREDENTIALS = {
+        username: "admin@eaccc.com",
+        password: "admin123"
+      };
+      
+      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        // Create admin session
+        (req.session as any).adminAuth = {
+          isAdmin: true,
+          role: "admin",
+          username: username,
+          loginTime: new Date().toISOString()
+        };
+        
+        console.log("Admin login successful:", username);
+        res.json({ 
+          success: true, 
+          message: "Admin authenticated successfully",
+          role: "admin"
+        });
+      } else {
+        console.log("Admin login failed:", username);
+        res.status(401).json({ 
+          success: false, 
+          message: "Invalid admin credentials" 
+        });
+      }
+    } catch (error) {
+      console.error("Admin login error:", error);
+      res.status(500).json({ message: "Admin login error" });
+    }
+  });
+
+  // Check admin auth status
+  app.get("/api/admin/auth", async (req, res) => {
+    const adminAuth = (req.session as any).adminAuth;
+    if (adminAuth?.isAdmin) {
+      res.json({ 
+        isAuthenticated: true, 
+        role: "admin", 
+        username: adminAuth.username 
+      });
+    } else {
+      res.status(401).json({ isAuthenticated: false });
+    }
+  });
+
+  // Admin logout
+  app.post("/api/admin/logout", async (req, res) => {
+    delete (req.session as any).adminAuth;
+    res.json({ success: true, message: "Admin logged out" });
+  });
+
+  // Admin middleware for admin-only routes
+  const requireAdminSession: RequestHandler = async (req: any, res, next) => {
+    const adminAuth = (req.session as any).adminAuth;
+    if (!adminAuth?.isAdmin) {
+      return res.status(401).json({ message: "Admin authentication required" });
+    }
+    req.adminAuth = adminAuth;
+    next();
+  };
+
   // Admin Dashboard Routes
-  app.get("/api/admin/stats", requireAdmin, async (req, res) => {
+  app.get("/api/admin/stats", requireAdminSession, async (req, res) => {
     try {
       const stats = await storage.getAdminStats();
       res.json(stats);
@@ -848,7 +917,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/users", requireAdmin, async (req, res) => {
+  app.get("/api/admin/users", requireAdminSession, async (req, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users);
@@ -858,7 +927,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/courses", requireAdmin, async (req, res) => {
+  app.get("/api/admin/courses", requireAdminSession, async (req, res) => {
     try {
       const courses = await storage.getAllCourses();
       res.json(courses);
@@ -868,7 +937,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/admin/instructors", requireAdmin, async (req, res) => {
+  app.get("/api/admin/instructors", requireAdminSession, async (req, res) => {
     try {
       const instructors = await storage.getInstructors();
       res.json(instructors);
@@ -878,7 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/users/:id/role", requireAdmin, async (req, res) => {
+  app.put("/api/admin/users/:id/role", requireAdminSession, async (req, res) => {
     try {
       const userId = req.params.id;
       const { role } = req.body;
@@ -895,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/instructors", requireAdmin, async (req, res) => {
+  app.post("/api/admin/instructors", requireAdminSession, async (req, res) => {
     try {
       const instructorData = insertInstructorSchema.parse(req.body);
       const instructor = await storage.createInstructor(instructorData);
@@ -906,6 +975,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating instructor:", error);
       res.status(500).json({ message: "Failed to create instructor" });
+    }
+  });
+
+  // Create course (admin only)
+  app.post("/api/admin/courses", requireAdminSession, async (req, res) => {
+    try {
+      const courseData = insertCourseSchema.parse(req.body);
+      const course = await storage.createCourse(courseData);
+      res.json(course);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid course data", errors: error.errors });
+      }
+      console.error("Error creating course:", error);
+      res.status(500).json({ message: "Failed to create course" });
     }
   });
 

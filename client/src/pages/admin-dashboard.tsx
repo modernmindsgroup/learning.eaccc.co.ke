@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -51,19 +51,32 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, username } = useAdminAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [isCreateInstructorOpen, setIsCreateInstructorOpen] = useState(false);
   const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
+  const [courseForm, setCourseForm] = useState({
+    title: "",
+    description: "",
+    instructorId: "",
+    price: "",
+    category: ""
+  });
+  const [instructorForm, setInstructorForm] = useState({
+    name: "",
+    email: "",
+    bio: "",
+    expertise: ""
+  });
 
-  // Redirect to admin login if not authenticated or not admin
+  // Redirect to admin login if not authenticated
   useEffect(() => {
-    if (!isLoading && (!isAuthenticated || user?.role !== "admin")) {
+    if (!isLoading && !isAuthenticated) {
       setLocation("/admin/login");
     }
-  }, [isAuthenticated, user?.role, isLoading, setLocation]);
+  }, [isAuthenticated, isLoading, setLocation]);
 
   // Show loading while checking auth
   if (isLoading) {
@@ -78,7 +91,7 @@ export default function AdminDashboard() {
   }
 
   // Don't render if not authorized (will redirect)
-  if (!isAuthenticated || user?.role !== "admin") {
+  if (!isAuthenticated) {
     return null;
   }
 
@@ -99,6 +112,29 @@ export default function AdminDashboard() {
     queryKey: ["/api/admin/instructors"],
   });
 
+  // Create course mutation
+  const createCourseMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("POST", "/api/admin/courses", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Course created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses"] });
+      setCourseForm({ title: "", description: "", instructorId: "", price: "", category: "" });
+      setIsCreateCourseOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create course",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Create instructor mutation
   const createInstructorMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -110,12 +146,34 @@ export default function AdminDashboard() {
         description: "Instructor created successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/instructors"] });
+      setInstructorForm({ name: "", email: "", bio: "", expertise: "" });
       setIsCreateInstructorOpen(false);
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create instructor",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Admin logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/admin/logout");
+    },
+    onSuccess: () => {
+      toast({
+        title: "Logged Out",
+        description: "Successfully logged out of admin portal",
+      });
+      setLocation("/admin/login");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to logout",
         variant: "destructive",
       });
     },
@@ -148,9 +206,18 @@ export default function AdminDashboard() {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage your learning platform</p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <p className="text-gray-600">Manage your learning platform - Welcome {username}</p>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+          >
+            {logoutMutation.isPending ? "Logging out..." : "Logout"}
+          </Button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -296,15 +363,56 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="course-title">Course Title</Label>
-                      <Input id="course-title" placeholder="Enter course title" />
+                      <Input 
+                        id="course-title" 
+                        placeholder="Enter course title"
+                        value={courseForm.title}
+                        onChange={(e) => setCourseForm({...courseForm, title: e.target.value})}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="course-description">Description</Label>
-                      <Textarea id="course-description" placeholder="Enter course description" />
+                      <Textarea 
+                        id="course-description" 
+                        placeholder="Enter course description"
+                        value={courseForm.description}
+                        onChange={(e) => setCourseForm({...courseForm, description: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="course-category">Category</Label>
+                      <Select 
+                        value={courseForm.category}
+                        onValueChange={(value) => setCourseForm({...courseForm, category: value})}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="customer-service">Customer Service</SelectItem>
+                          <SelectItem value="leadership">Leadership</SelectItem>
+                          <SelectItem value="business-development">Business Development</SelectItem>
+                          <SelectItem value="communication">Communication</SelectItem>
+                          <SelectItem value="technology">Technology</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="course-price">Price (USD)</Label>
+                      <Input 
+                        id="course-price" 
+                        type="number"
+                        placeholder="0 for free course"
+                        value={courseForm.price}
+                        onChange={(e) => setCourseForm({...courseForm, price: e.target.value})}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="course-instructor">Instructor</Label>
-                      <Select>
+                      <Select 
+                        value={courseForm.instructorId}
+                        onValueChange={(value) => setCourseForm({...courseForm, instructorId: value})}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select instructor" />
                         </SelectTrigger>
@@ -317,7 +425,31 @@ export default function AdminDashboard() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button className="w-full">Create Course</Button>
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        if (!courseForm.title || !courseForm.description || !courseForm.instructorId || !courseForm.category) {
+                          toast({
+                            title: "Missing Information",
+                            description: "Please fill in all required fields",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        createCourseMutation.mutate({
+                          title: courseForm.title,
+                          description: courseForm.description,
+                          instructorId: parseInt(courseForm.instructorId),
+                          price: parseFloat(courseForm.price) || 0,
+                          category: courseForm.category,
+                          isFree: !courseForm.price || parseFloat(courseForm.price) === 0
+                        });
+                      }}
+                      disabled={createCourseMutation.isPending}
+                    >
+                      {createCourseMutation.isPending ? "Creating..." : "Create Course"}
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -384,27 +516,63 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="instructor-name">Name</Label>
-                      <Input id="instructor-name" placeholder="Enter instructor name" />
+                      <Input 
+                        id="instructor-name" 
+                        placeholder="Enter instructor name"
+                        value={instructorForm.name}
+                        onChange={(e) => setInstructorForm({...instructorForm, name: e.target.value})}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="instructor-email">Email</Label>
-                      <Input id="instructor-email" type="email" placeholder="Enter instructor email" />
+                      <Input 
+                        id="instructor-email" 
+                        type="email" 
+                        placeholder="Enter instructor email"
+                        value={instructorForm.email}
+                        onChange={(e) => setInstructorForm({...instructorForm, email: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="instructor-expertise">Expertise</Label>
+                      <Input 
+                        id="instructor-expertise" 
+                        placeholder="e.g., Customer Service, Leadership"
+                        value={instructorForm.expertise}
+                        onChange={(e) => setInstructorForm({...instructorForm, expertise: e.target.value})}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="instructor-bio">Bio</Label>
-                      <Textarea id="instructor-bio" placeholder="Enter instructor bio" />
+                      <Textarea 
+                        id="instructor-bio" 
+                        placeholder="Enter instructor bio"
+                        value={instructorForm.bio}
+                        onChange={(e) => setInstructorForm({...instructorForm, bio: e.target.value})}
+                      />
                     </div>
                     <Button 
                       className="w-full"
                       onClick={() => {
-                        // This would be implemented with form handling
-                        toast({
-                          title: "Feature Coming Soon",
-                          description: "Instructor creation form will be implemented",
+                        if (!instructorForm.name || !instructorForm.email || !instructorForm.expertise) {
+                          toast({
+                            title: "Missing Information",
+                            description: "Please fill in all required fields",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        createInstructorMutation.mutate({
+                          name: instructorForm.name,
+                          email: instructorForm.email,
+                          expertise: instructorForm.expertise,
+                          bio: instructorForm.bio
                         });
                       }}
+                      disabled={createInstructorMutation.isPending}
                     >
-                      Create Instructor
+                      {createInstructorMutation.isPending ? "Creating..." : "Create Instructor"}
                     </Button>
                   </div>
                 </DialogContent>
