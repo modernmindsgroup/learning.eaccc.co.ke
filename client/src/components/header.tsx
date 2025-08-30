@@ -38,7 +38,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+    <header className="bg-white/95 backdrop-blur-lg shadow-soft border-b border-gray-100/50 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo Section */}
@@ -156,13 +156,13 @@ export default function Header() {
               <>
                 <Button
                   variant="outline"
-                  className="hidden md:block text-eaccc-blue hover:bg-eaccc-blue hover:text-white border-eaccc-blue"
+                  className="hidden md:block text-eaccc-blue hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white border-eaccc-blue font-semibold px-6 py-2 rounded-xl transition-all duration-300 hover:shadow-md"
                   onClick={() => (window.location.href = "/api/login")}
                 >
                   Login
                 </Button>
                 <Button
-                  className="bg-eaccc-orange hover:bg-orange-600 text-white"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
                   onClick={() => (window.location.href = "/api/login")}
                 >
                   Register

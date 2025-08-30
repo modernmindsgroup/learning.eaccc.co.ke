@@ -43,25 +43,38 @@ export default function StatsSection() {
   ];
 
   return (
-    <section className="bg-gray-50 py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <section className="relative py-20 bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(59,130,246,0.05),transparent_50%)]" />
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {statsData.map((stat, index) => (
             <Card 
               key={index} 
-              className="bg-white hover:shadow-lg transition-all duration-300 hover:-translate-y-2 cursor-pointer group"
+              className="group cursor-pointer transition-all duration-500 hover:shadow-hover hover:-translate-y-3 bg-white/80 backdrop-blur-sm border-0 rounded-3xl overflow-hidden"
+              style={{
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.8) 100%)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04)'
+              }}
             >
-              <CardContent className="p-6 text-center">
-                <div className={`w-16 h-16 ${stat.bgColor} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
-                  <stat.icon className="h-8 w-8 text-white" />
+              <CardContent className="p-8 text-center relative">
+                {/* Gradient background effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-50/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                
+                <div className={`relative w-20 h-20 ${stat.bgColor} rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-125 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
+                  <stat.icon className="h-10 w-10 text-white drop-shadow-sm" />
                 </div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                
+                <h3 className="font-heading text-4xl font-black text-gray-900 mb-3 group-hover:text-gradient transition-all duration-300">
                   {stat.value}
                 </h3>
-                <h4 className="font-semibold text-gray-800 mb-2">
+                
+                <h4 className="font-heading font-bold text-lg text-gray-800 mb-3 tracking-tight">
                   {stat.title}
                 </h4>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                
+                <p className="text-sm text-gray-600/80 leading-relaxed font-medium">
                   {stat.description}
                 </p>
               </CardContent>

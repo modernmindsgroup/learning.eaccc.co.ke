@@ -33,43 +33,45 @@ export default function Home() {
       
       {/* Hero Section with learner image background */}
       <section 
-        className="relative bg-cover bg-center bg-no-repeat text-white"
+        className="relative bg-cover bg-center bg-no-repeat text-white overflow-hidden"
         style={{
           backgroundImage: `url('/attached_assets/generated_images/African_learners_studying_together_7d5857c2.png')`
         }}
       >
-        {/* Background overlay for text readability */}
-        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+        {/* Enhanced gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-blue-900/70"></div>
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
-          <div className="max-w-3xl">
-            <h1 className="text-4xl lg:text-6xl font-bold leading-tight mb-6">
-              Empowering Africa Through Skills and Service Excellence
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 lg:py-40">
+          <div className="max-w-4xl">
+            <h1 className="font-heading text-5xl lg:text-7xl font-extrabold leading-tight mb-8 tracking-tight">
+              <span className="block">Empowering Africa</span>
+              <span className="block text-gradient bg-gradient-to-r from-white to-blue-100">Through Excellence</span>
             </h1>
-            <p className="text-xl lg:text-2xl mb-8 text-blue-100">
-              Join thousands of learners across East Africa in developing world-class customer service and professional skills.
+            <p className="text-xl lg:text-2xl mb-10 text-white/90 font-medium leading-relaxed max-w-3xl">
+              Join thousands of learners across East Africa in developing world-class customer service and professional skills with our cutting-edge learning platform.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-6 pt-4">
               <Button
-                className="bg-eaccc-orange hover:bg-orange-600 text-white px-8 py-4 text-lg font-semibold"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-10 py-5 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
                 onClick={() => window.location.href = "/courses"}
               >
-                <BookOpen className="mr-2 h-5 w-5" />
+                <BookOpen className="mr-3 h-6 w-6" />
                 Browse Courses
               </Button>
               <Button
                 variant="outline"
-                className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-eaccc-blue px-8 py-4 text-lg font-semibold"
-                style={{ backgroundColor: 'transparent' }}
+                className="border-2 border-white/60 text-white bg-white/10 hover:bg-white hover:text-gray-900 px-10 py-5 text-lg font-bold rounded-2xl backdrop-blur-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
                 onClick={() => window.location.href = "/about"}
               >
                 Learn More
               </Button>
               <Button 
-                className="bg-eaccc-green hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold"
+                className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-10 py-5 text-lg font-bold rounded-2xl shadow-hover transition-all duration-300 hover:shadow-2xl hover:-translate-y-1"
                 onClick={() => window.location.href = "/dashboard"}
               >
-                <BookOpen className="mr-2 h-5 w-5" />
+                <BookOpen className="mr-3 h-6 w-6" />
                 Go to Dashboard
               </Button>
             </div>
@@ -81,41 +83,47 @@ export default function Home() {
 
       {/* Continue Learning Section */}
       {enrollments && enrollments.length > 0 && (
-        <section className="bg-white py-16">
+        <section className="bg-gradient-to-br from-white via-blue-50/20 to-indigo-50/30 py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">Continue Learning</h2>
-              <a href="/dashboard" className="text-eaccc-blue hover:text-blue-700 font-semibold">
-                View All <ArrowRight className="inline w-4 h-4 ml-1" />
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="font-heading text-4xl font-black text-gray-900 tracking-tight">Continue Learning</h2>
+              <a href="/dashboard" className="group flex items-center text-eaccc-blue hover:text-blue-700 font-bold text-lg transition-all duration-300">
+                View All 
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {enrollments.slice(0, 3).map((enrollment) => (
-                <Card key={enrollment.id} className="hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
-                    <img 
-                      src={enrollment.course.thumbnailUrl || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
-                      alt={enrollment.course.title}
-                      className="w-full h-40 object-cover rounded-lg mb-4"
-                    />
-                    <h3 className="text-lg font-semibold mb-2">{enrollment.course.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3">
-                      by {enrollment.course.instructor?.name}
-                    </p>
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">Progress</span>
-                        <span className="text-sm font-medium">{enrollment.progress}%</span>
-                      </div>
-                      <Progress value={enrollment.progress} className="h-2" />
+                <Card key={enrollment.id} className="group cursor-pointer transition-all duration-500 hover:shadow-hover hover:-translate-y-2 bg-white/90 backdrop-blur-sm border-0 rounded-3xl overflow-hidden shadow-soft">
+                  <CardContent className="p-0">
+                    <div className="relative overflow-hidden">
+                      <img 
+                        src={enrollment.course.thumbnailUrl || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"} 
+                        alt={enrollment.course.title}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
-                    <Button 
-                      className="w-full bg-eaccc-blue hover:bg-blue-700"
-                      onClick={() => window.location.href = `/learn/${enrollment.course.id}`}
-                    >
-                      Continue Learning
-                    </Button>
+                    <div className="p-6">
+                      <h3 className="font-heading text-xl font-bold mb-2 text-gray-900 group-hover:text-eaccc-blue transition-colors duration-300">{enrollment.course.title}</h3>
+                      <p className="text-gray-600 text-sm mb-4 font-medium">
+                        by {enrollment.course.instructor?.name}
+                      </p>
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-700">Progress</span>
+                          <span className="text-sm font-bold text-eaccc-blue">{enrollment.progress}%</span>
+                        </div>
+                        <Progress value={enrollment.progress} className="h-3 bg-gray-100 rounded-full" />
+                      </div>
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-2xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                        onClick={() => window.location.href = `/learn/${enrollment.course.id}`}
+                      >
+                        Continue Learning
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -125,44 +133,50 @@ export default function Home() {
       )}
 
       {/* Quick Stats */}
-      <section className="bg-eaccc-bg py-16">
+      <section className="bg-gradient-to-br from-indigo-50 via-white to-purple-50/30 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Your Learning Progress</h2>
+          <h2 className="font-heading text-4xl font-black text-gray-900 mb-12 text-center tracking-tight">Your Learning Progress</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="text-center">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-center">
-                  <BookOpen className="mr-2 h-6 w-6 text-eaccc-blue" />
-                  Enrolled Courses
+            <Card className="group text-center bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-soft hover:shadow-hover transition-all duration-500 hover:-translate-y-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <BookOpen className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-heading font-bold text-lg text-gray-800">Enrolled Courses</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-eaccc-blue">{enrollments?.length || 0}</p>
+                <p className="font-heading text-4xl font-black text-blue-600 group-hover:text-gradient transition-all duration-300">{enrollments?.length || 0}</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-center">
-                  <Award className="mr-2 h-6 w-6 text-eaccc-green" />
-                  Certificates Earned
+            <Card className="group text-center bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-soft hover:shadow-hover transition-all duration-500 hover:-translate-y-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Award className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-heading font-bold text-lg text-gray-800">Certificates Earned</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-eaccc-green">{certificates?.length || 0}</p>
+                <p className="font-heading text-4xl font-black text-green-600 group-hover:text-gradient transition-all duration-300">{certificates?.length || 0}</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-center">
-                  <Clock className="mr-2 h-6 w-6 text-eaccc-orange" />
-                  Completed Courses
+            <Card className="group text-center bg-white/80 backdrop-blur-sm border-0 rounded-3xl shadow-soft hover:shadow-hover transition-all duration-500 hover:-translate-y-2">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex flex-col items-center">
+                  <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <Clock className="h-8 w-8 text-white" />
+                  </div>
+                  <span className="font-heading font-bold text-lg text-gray-800">Completed Courses</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-bold text-eaccc-orange">
+                <p className="font-heading text-4xl font-black text-orange-600 group-hover:text-gradient transition-all duration-300">
                   {enrollments?.filter(e => e.progress === 100).length || 0}
                 </p>
               </CardContent>
@@ -172,12 +186,13 @@ export default function Home() {
       </section>
 
       {/* Newest Courses Section */}
-      <section className="bg-white py-16">
+      <section className="bg-gradient-to-br from-white via-purple-50/20 to-blue-50/30 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Explore New Courses</h2>
-            <a href="/courses" className="text-eaccc-blue hover:text-blue-700 font-semibold">
-              View All <ArrowRight className="inline w-4 h-4 ml-1" />
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="font-heading text-4xl font-black text-gray-900 tracking-tight">Explore New Courses</h2>
+            <a href="/courses" className="group flex items-center text-eaccc-blue hover:text-blue-700 font-bold text-lg transition-all duration-300">
+              View All 
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
             </a>
           </div>
           

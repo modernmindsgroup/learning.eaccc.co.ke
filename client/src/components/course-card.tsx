@@ -10,37 +10,38 @@ interface CourseCardProps {
 
 export default function CourseCard({ course }: CourseCardProps) {
   return (
-    <Card className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
-      <div className="relative">
+    <Card className="group bg-white/90 backdrop-blur-sm rounded-3xl shadow-soft hover:shadow-hover transition-all duration-500 hover:-translate-y-3 overflow-hidden border-0">
+      <div className="relative overflow-hidden">
         <img
           src={course.thumbnailUrl || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=200"}
           alt={course.title}
-          className="w-full h-48 object-cover"
+          className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-700"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="absolute top-4 left-4 flex space-x-2">
           {course.isFree && (
-            <Badge className="bg-eaccc-green text-white font-semibold">FREE</Badge>
+            <Badge className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold px-3 py-1 rounded-full shadow-lg">FREE</Badge>
           )}
           {course.isBestseller && (
-            <Badge className="bg-eaccc-orange text-white font-semibold">BESTSELLER</Badge>
+            <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold px-3 py-1 rounded-full shadow-lg">BESTSELLER</Badge>
           )}
           {course.isFeatured && (
-            <Badge className="bg-blue-600 text-white font-semibold">FEATURED</Badge>
+            <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold px-3 py-1 rounded-full shadow-lg">FEATURED</Badge>
           )}
         </div>
         <div className="absolute top-4 right-4">
-          <span className="bg-black bg-opacity-70 text-white px-2 py-1 rounded text-sm">
+          <span className="bg-black/60 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-semibold">
             {course.duration}
           </span>
         </div>
       </div>
       
-      <CardContent className="p-6">
-        <div className="mb-3">
-          <h3 className="text-xl font-semibold text-gray-900 mb-2 line-clamp-2">
+      <CardContent className="p-7">
+        <div className="mb-4">
+          <h3 className="font-heading text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-eaccc-blue transition-colors duration-300">
             {course.title}
           </h3>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm font-medium">
             by {course.instructor?.name || "Unknown Instructor"}
           </p>
         </div>
@@ -52,7 +53,7 @@ export default function CourseCard({ course }: CourseCardProps) {
                 <Star
                   key={i}
                   className={`w-4 h-4 ${
-                    i < Math.floor(parseFloat(course.rating) || 0)
+                    i < Math.floor(parseFloat(course.rating || "0") || 0)
                       ? "text-yellow-400 fill-current"
                       : "text-gray-300"
                   }`}
@@ -60,7 +61,7 @@ export default function CourseCard({ course }: CourseCardProps) {
               ))}
             </div>
             <span className="text-gray-600 text-sm ml-2">
-              ({parseFloat(course.rating).toFixed(1)})
+              ({parseFloat(course.rating || "0").toFixed(1)})
             </span>
           </div>
           
@@ -71,11 +72,11 @@ export default function CourseCard({ course }: CourseCardProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="text-2xl font-bold text-eaccc-blue">
+          <div className="font-heading text-3xl font-black text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text">
             {course.isFree ? "FREE" : `$${course.price}`}
           </div>
           <Button
-            className="bg-eaccc-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
             onClick={() => window.location.href = `/courses/${course.id}`}
           >
             {course.isFree ? "Enroll Now" : "View Course"}
@@ -83,14 +84,14 @@ export default function CourseCard({ course }: CourseCardProps) {
         </div>
 
         {/* Course features */}
-        <div className="mt-4 pt-4 border-t border-gray-100">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-1" />
+        <div className="mt-6 pt-4 border-t border-gray-100/60">
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center text-gray-600 font-medium">
+              <Clock className="w-4 h-4 mr-2" />
               {course.duration}
             </div>
             {course.hasCertificate && (
-              <span className="text-eaccc-green font-medium">Certificate included</span>
+              <span className="text-green-600 font-bold text-xs bg-green-50 px-2 py-1 rounded-full">Certificate included</span>
             )}
           </div>
         </div>
