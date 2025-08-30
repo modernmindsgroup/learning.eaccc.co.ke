@@ -72,27 +72,18 @@ export const courses = pgTable("courses", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Topics table (course sections)
-export const topics = pgTable("topics", {
-  id: serial("id").primaryKey(),
-  courseId: integer("course_id").references(() => courses.id),
-  title: varchar("title", { length: 255 }).notNull(),
-  description: text("description"),
-  orderIndex: integer("order_index").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Lessons table
 export const lessons = pgTable("lessons", {
   id: serial("id").primaryKey(),
   courseId: integer("course_id").references(() => courses.id),
-  topicId: integer("topic_id").references(() => topics.id),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   content: text("content"), // For text-based lessons
   videoUrl: varchar("video_url"), // For video lessons
   duration: varchar("duration"), // e.g., "15 minutes"
   orderIndex: integer("order_index").notNull(),
+  sectionTitle: varchar("section_title", { length: 255 }).default("Introduction"),
+  sectionOrder: integer("section_order").default(1),
   isLocked: boolean("is_locked").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -185,20 +176,11 @@ export const coursesRelations = relations(courses, ({ one, many }) => ({
     fields: [courses.instructorId],
     references: [instructors.id],
   }),
-  topics: many(topics),
   lessons: many(lessons),
   enrollments: many(enrollments),
   certificates: many(certificates),
   reviews: many(reviews),
   orders: many(orders),
-}));
-
-export const topicsRelations = relations(topics, ({ one, many }) => ({
-  course: one(courses, {
-    fields: [topics.courseId],
-    references: [courses.id],
-  }),
-  lessons: many(lessons),
 }));
 
 export const ordersRelations = relations(orders, ({ one }) => ({
@@ -216,10 +198,6 @@ export const lessonsRelations = relations(lessons, ({ one, many }) => ({
   course: one(courses, {
     fields: [lessons.courseId],
     references: [courses.id],
-  }),
-  topic: one(topics, {
-    fields: [lessons.topicId],
-    references: [topics.id],
   }),
   progress: many(lessonProgress),
 }));
@@ -256,11 +234,6 @@ export const insertCourseSchema = createInsertSchema(courses).omit({
   rating: true,
 });
 
-export const insertTopicSchema = createInsertSchema(topics).omit({
-  id: true,
-  createdAt: true,
-});
-
 export const insertLessonSchema = createInsertSchema(lessons).omit({
   id: true,
   createdAt: true,
@@ -290,7 +263,6 @@ export type UpsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Instructor = typeof instructors.$inferSelect;
 export type Course = typeof courses.$inferSelect;
-export type Topic = typeof topics.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type LessonProgress = typeof lessonProgress.$inferSelect;
@@ -300,7 +272,6 @@ export type BlogPost = typeof blogPosts.$inferSelect;
 
 export type InsertInstructor = z.infer<typeof insertInstructorSchema>;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
-export type InsertTopic = z.infer<typeof insertTopicSchema>;
 export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type InsertReview = z.infer<typeof insertReviewSchema>;
