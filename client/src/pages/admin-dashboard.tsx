@@ -36,11 +36,14 @@ import {
   Edit,
   Trash2,
   Crown,
-  GraduationCap
+  GraduationCap,
+  Play,
+  Upload
 } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
-import type { User, Course, Instructor } from "@shared/schema";
+import { VideoUploader } from "@/components/VideoUploader";
+import type { User, Course, Instructor, Topic, Lesson } from "@shared/schema";
 
 interface DashboardStats {
   totalUsers: number;
@@ -60,6 +63,13 @@ export default function AdminDashboard() {
   const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  const [isCreateTopicOpen, setIsCreateTopicOpen] = useState(false);
+  const [isEditTopicOpen, setIsEditTopicOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [isCreateLessonOpen, setIsCreateLessonOpen] = useState(false);
+  const [isEditLessonOpen, setIsEditLessonOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [courseForm, setCourseForm] = useState({
     title: "",
     description: "",
@@ -79,6 +89,24 @@ export default function AdminDashboard() {
     email: "",
     bio: "",
     expertise: ""
+  });
+
+  const [topicForm, setTopicForm] = useState({
+    title: "",
+    description: "",
+    courseId: "",
+    orderIndex: ""
+  });
+
+  const [lessonForm, setLessonForm] = useState({
+    title: "",
+    description: "",
+    content: "",
+    topicId: "",
+    courseId: "",
+    duration: "",
+    orderIndex: "",
+    videoUrl: ""
   });
 
   // Fetch dashboard data (call hooks before any conditional returns)
@@ -102,6 +130,18 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
+  // Fetch topics for selected course
+  const { data: topics } = useQuery<Topic[]>({
+    queryKey: ["/api/courses", selectedCourseId, "topics"],
+    enabled: isAuthenticated && selectedCourseId !== null,
+  });
+
+  // Fetch lessons for all topics of selected course
+  const { data: lessons } = useQuery<Lesson[]>({
+    queryKey: ["/api/courses", selectedCourseId, "lessons"],
+    enabled: isAuthenticated && selectedCourseId !== null,
+  });
+
   // Create course mutation
   const createCourseMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -120,6 +160,139 @@ export default function AdminDashboard() {
       toast({
         title: "Error",
         description: error.message || "Failed to create course",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Topic mutations
+  const createTopicMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("POST", "/api/admin/topics", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Topic created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "topics"] });
+      resetTopicForm();
+      setIsCreateTopicOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create topic",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateTopicMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      await apiRequest("PUT", `/api/admin/topics/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Topic updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "topics"] });
+      resetTopicForm();
+      setIsEditTopicOpen(false);
+      setEditingTopic(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update topic",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteTopicMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/topics/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Topic deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "topics"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "lessons"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete topic",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Lesson mutations
+  const createLessonMutation = useMutation({
+    mutationFn: async (data: any) => {
+      await apiRequest("POST", "/api/admin/lessons", data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Lesson created successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "lessons"] });
+      resetLessonForm();
+      setIsCreateLessonOpen(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create lesson",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateLessonMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      await apiRequest("PUT", `/api/admin/lessons/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Lesson updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "lessons"] });
+      resetLessonForm();
+      setIsEditLessonOpen(false);
+      setEditingLesson(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update lesson",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/lessons/${id}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Lesson deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/courses", selectedCourseId, "lessons"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete lesson",
         variant: "destructive",
       });
     },
@@ -184,6 +357,28 @@ export default function AdminDashboard() {
       hasCertificate: true,
       isFeatured: false,
       isBestseller: false
+    });
+  };
+
+  const resetTopicForm = () => {
+    setTopicForm({
+      title: "",
+      description: "",
+      courseId: "",
+      orderIndex: ""
+    });
+  };
+
+  const resetLessonForm = () => {
+    setLessonForm({
+      title: "",
+      description: "",
+      content: "",
+      topicId: "",
+      courseId: "",
+      duration: "",
+      orderIndex: "",
+      videoUrl: ""
     });
   };
 
@@ -316,10 +511,12 @@ export default function AdminDashboard() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="courses">Courses</TabsTrigger>
+            <TabsTrigger value="topics">Topics</TabsTrigger>
+            <TabsTrigger value="lessons">Lessons</TabsTrigger>
             <TabsTrigger value="instructors">Instructors</TabsTrigger>
           </TabsList>
 
@@ -907,6 +1104,461 @@ export default function AdminDashboard() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Topics Tab */}
+          <TabsContent value="topics" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Topic Management</h2>
+              <div className="flex space-x-2">
+                <Select value={selectedCourseId?.toString() || ""} onValueChange={(value) => setSelectedCourseId(value ? parseInt(value) : null)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses?.map((course) => (
+                      <SelectItem key={course.id} value={course.id.toString()}>
+                        {course.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Dialog open={isCreateTopicOpen} onOpenChange={setIsCreateTopicOpen}>
+                  <DialogTrigger asChild>
+                    <Button disabled={!selectedCourseId}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Topic
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Topic</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="topic-title">Title</Label>
+                        <Input 
+                          id="topic-title" 
+                          placeholder="Enter topic title"
+                          value={topicForm.title}
+                          onChange={(e) => setTopicForm({...topicForm, title: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="topic-description">Description</Label>
+                        <Textarea 
+                          id="topic-description" 
+                          placeholder="Enter topic description"
+                          value={topicForm.description}
+                          onChange={(e) => setTopicForm({...topicForm, description: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="topic-order">Order Index</Label>
+                        <Input 
+                          id="topic-order" 
+                          type="number"
+                          placeholder="Enter display order"
+                          value={topicForm.orderIndex}
+                          onChange={(e) => setTopicForm({...topicForm, orderIndex: e.target.value})}
+                        />
+                      </div>
+                      <Button 
+                        className="w-full"
+                        onClick={() => {
+                          if (!topicForm.title || !selectedCourseId) {
+                            toast({
+                              title: "Missing Information",
+                              description: "Please fill in required fields and select a course",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          createTopicMutation.mutate({
+                            title: topicForm.title,
+                            description: topicForm.description,
+                            courseId: selectedCourseId,
+                            orderIndex: parseInt(topicForm.orderIndex) || 0
+                          });
+                        }}
+                        disabled={createTopicMutation.isPending}
+                      >
+                        {createTopicMutation.isPending ? "Creating..." : "Create Topic"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {selectedCourseId && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Topics for {courses?.find(c => c.id === selectedCourseId)?.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Order</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topics?.map((topic) => (
+                        <TableRow key={topic.id}>
+                          <TableCell className="font-medium">{topic.title}</TableCell>
+                          <TableCell>{topic.description || "No description"}</TableCell>
+                          <TableCell>{topic.orderIndex}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingTopic(topic);
+                                  setTopicForm({
+                                    title: topic.title,
+                                    description: topic.description || "",
+                                    courseId: topic.courseId.toString(),
+                                    orderIndex: topic.orderIndex.toString()
+                                  });
+                                  setIsEditTopicOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => deleteTopicMutation.mutate(topic.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Edit Topic Dialog */}
+            <Dialog open={isEditTopicOpen} onOpenChange={setIsEditTopicOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Topic</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="edit-topic-title">Title</Label>
+                    <Input 
+                      id="edit-topic-title" 
+                      placeholder="Enter topic title"
+                      value={topicForm.title}
+                      onChange={(e) => setTopicForm({...topicForm, title: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-topic-description">Description</Label>
+                    <Textarea 
+                      id="edit-topic-description" 
+                      placeholder="Enter topic description"
+                      value={topicForm.description}
+                      onChange={(e) => setTopicForm({...topicForm, description: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-topic-order">Order Index</Label>
+                    <Input 
+                      id="edit-topic-order" 
+                      type="number"
+                      placeholder="Enter display order"
+                      value={topicForm.orderIndex}
+                      onChange={(e) => setTopicForm({...topicForm, orderIndex: e.target.value})}
+                    />
+                  </div>
+                  <Button 
+                    className="w-full"
+                    onClick={() => {
+                      if (!topicForm.title || !editingTopic) {
+                        toast({
+                          title: "Missing Information",
+                          description: "Please fill in required fields",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      
+                      updateTopicMutation.mutate({
+                        id: editingTopic.id,
+                        data: {
+                          title: topicForm.title,
+                          description: topicForm.description,
+                          courseId: editingTopic.courseId,
+                          orderIndex: parseInt(topicForm.orderIndex) || 0
+                        }
+                      });
+                    }}
+                    disabled={updateTopicMutation.isPending}
+                  >
+                    {updateTopicMutation.isPending ? "Updating..." : "Update Topic"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
+
+          {/* Lessons Tab */}
+          <TabsContent value="lessons" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Lesson Management</h2>
+              <div className="flex space-x-2">
+                <Select value={selectedCourseId?.toString() || ""} onValueChange={(value) => setSelectedCourseId(value ? parseInt(value) : null)}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Course" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {courses?.map((course) => (
+                      <SelectItem key={course.id} value={course.id.toString()}>
+                        {course.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Dialog open={isCreateLessonOpen} onOpenChange={setIsCreateLessonOpen}>
+                  <DialogTrigger asChild>
+                    <Button disabled={!selectedCourseId}>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Lesson
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>Create New Lesson</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="lesson-title">Title</Label>
+                        <Input 
+                          id="lesson-title" 
+                          placeholder="Enter lesson title"
+                          value={lessonForm.title}
+                          onChange={(e) => setLessonForm({...lessonForm, title: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lesson-topic">Topic</Label>
+                        <Select value={lessonForm.topicId} onValueChange={(value) => setLessonForm({...lessonForm, topicId: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Topic" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {topics?.map((topic) => (
+                              <SelectItem key={topic.id} value={topic.id.toString()}>
+                                {topic.title}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="lesson-description">Description</Label>
+                        <Textarea 
+                          id="lesson-description" 
+                          placeholder="Enter lesson description"
+                          value={lessonForm.description}
+                          onChange={(e) => setLessonForm({...lessonForm, description: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lesson-content">Content</Label>
+                        <Textarea 
+                          id="lesson-content" 
+                          placeholder="Enter lesson content"
+                          value={lessonForm.content}
+                          onChange={(e) => setLessonForm({...lessonForm, content: e.target.value})}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="lesson-duration">Duration</Label>
+                          <Input 
+                            id="lesson-duration" 
+                            placeholder="e.g., 10 minutes"
+                            value={lessonForm.duration}
+                            onChange={(e) => setLessonForm({...lessonForm, duration: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="lesson-order">Order Index</Label>
+                          <Input 
+                            id="lesson-order" 
+                            type="number"
+                            placeholder="Enter display order"
+                            value={lessonForm.orderIndex}
+                            onChange={(e) => setLessonForm({...lessonForm, orderIndex: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Video Upload</Label>
+                        <VideoUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={104857600} // 100MB
+                          onGetUploadParameters={async () => {
+                            const response = await fetch("/api/videos/upload", {
+                              method: "POST",
+                              headers: {
+                                "Content-Type": "application/json",
+                              },
+                              credentials: "include",
+                            });
+                            const data = await response.json();
+                            return {
+                              method: "PUT" as const,
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={async (result) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadURL = result.successful[0].uploadURL;
+                              const response = await fetch("/api/videos/process", {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                credentials: "include",
+                                body: JSON.stringify({ videoURL: uploadURL }),
+                              });
+                              const data = await response.json();
+                              setLessonForm({...lessonForm, videoUrl: data.videoPath});
+                              toast({
+                                title: "Success",
+                                description: "Video uploaded successfully!",
+                              });
+                            }
+                          }}
+                        >
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Video
+                        </VideoUploader>
+                        {lessonForm.videoUrl && (
+                          <p className="text-sm text-green-600 mt-1">Video uploaded: {lessonForm.videoUrl}</p>
+                        )}
+                      </div>
+                      <Button 
+                        className="w-full"
+                        onClick={() => {
+                          if (!lessonForm.title || !lessonForm.topicId || !selectedCourseId) {
+                            toast({
+                              title: "Missing Information",
+                              description: "Please fill in required fields and select a course/topic",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          createLessonMutation.mutate({
+                            title: lessonForm.title,
+                            description: lessonForm.description,
+                            content: lessonForm.content,
+                            topicId: parseInt(lessonForm.topicId),
+                            courseId: selectedCourseId,
+                            duration: lessonForm.duration,
+                            orderIndex: parseInt(lessonForm.orderIndex) || 0,
+                            videoUrl: lessonForm.videoUrl
+                          });
+                        }}
+                        disabled={createLessonMutation.isPending}
+                      >
+                        {createLessonMutation.isPending ? "Creating..." : "Create Lesson"}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {selectedCourseId && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Lessons for {courses?.find(c => c.id === selectedCourseId)?.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Title</TableHead>
+                        <TableHead>Topic</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Video</TableHead>
+                        <TableHead>Order</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {lessons?.map((lesson) => (
+                        <TableRow key={lesson.id}>
+                          <TableCell className="font-medium">{lesson.title}</TableCell>
+                          <TableCell>
+                            {topics?.find(t => t.id === lesson.topicId)?.title || "No topic"}
+                          </TableCell>
+                          <TableCell>{lesson.duration || "Not set"}</TableCell>
+                          <TableCell>
+                            {lesson.videoUrl ? (
+                              <Badge variant="default" className="flex items-center">
+                                <Play className="mr-1 h-3 w-3" />
+                                Video
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary">No Video</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{lesson.orderIndex}</TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingLesson(lesson);
+                                  setLessonForm({
+                                    title: lesson.title,
+                                    description: lesson.description || "",
+                                    content: lesson.content || "",
+                                    topicId: lesson.topicId?.toString() || "",
+                                    courseId: lesson.courseId.toString(),
+                                    duration: lesson.duration || "",
+                                    orderIndex: lesson.orderIndex.toString(),
+                                    videoUrl: lesson.videoUrl || ""
+                                  });
+                                  setIsEditLessonOpen(true);
+                                }}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => deleteLessonMutation.mutate(lesson.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Instructors Tab */}

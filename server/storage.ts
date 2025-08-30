@@ -2,6 +2,7 @@ import {
   users,
   instructors,
   courses,
+  topics,
   lessons,
   enrollments,
   lessonProgress,
@@ -17,6 +18,8 @@ import {
   type InsertCourse,
   type CourseWithInstructor,
   type CourseWithProgress,
+  type Topic,
+  type InsertTopic,
   type Lesson,
   type InsertLesson,
   type Enrollment,
@@ -61,10 +64,20 @@ export interface IStorage {
   getFreeCourses(limit?: number): Promise<CourseWithInstructor[]>;
   getFeaturedCourses(): Promise<CourseWithInstructor[]>;
 
+  // Topic operations
+  getCourseTopics(courseId: number): Promise<Topic[]>;
+  getTopic(id: number): Promise<Topic | undefined>;
+  createTopic(topic: InsertTopic): Promise<Topic>;
+  updateTopic(id: number, topic: InsertTopic): Promise<Topic | undefined>;
+  deleteTopic(id: number): Promise<boolean>;
+
   // Lesson operations
   getCourseLessons(courseId: number): Promise<Lesson[]>;
+  getTopicLessons(topicId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
+  updateLesson(id: number, lesson: InsertLesson): Promise<Lesson | undefined>;
+  deleteLesson(id: number): Promise<boolean>;
 
   // Enrollment operations
   enrollUser(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -437,12 +450,57 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(courses.rating));
   }
 
+  // Topic operations
+  async getCourseTopics(courseId: number): Promise<Topic[]> {
+    return await db
+      .select()
+      .from(topics)
+      .where(eq(topics.courseId, courseId))
+      .orderBy(asc(topics.orderIndex));
+  }
+
+  async getTopic(id: number): Promise<Topic | undefined> {
+    const [topic] = await db.select().from(topics).where(eq(topics.id, id));
+    return topic;
+  }
+
+  async createTopic(topicData: InsertTopic): Promise<Topic> {
+    const [topic] = await db.insert(topics).values(topicData).returning();
+    return topic;
+  }
+
+  async updateTopic(id: number, topicData: InsertTopic): Promise<Topic | undefined> {
+    const [topic] = await db
+      .update(topics)
+      .set(topicData)
+      .where(eq(topics.id, id))
+      .returning();
+    return topic;
+  }
+
+  async deleteTopic(id: number): Promise<boolean> {
+    // First delete all lessons in this topic
+    await db.delete(lessons).where(eq(lessons.topicId, id));
+    
+    // Then delete the topic
+    const result = await db.delete(topics).where(eq(topics.id, id));
+    return result.rowCount > 0;
+  }
+
   // Lesson operations
   async getCourseLessons(courseId: number): Promise<Lesson[]> {
     return await db
       .select()
       .from(lessons)
       .where(eq(lessons.courseId, courseId))
+      .orderBy(asc(lessons.orderIndex));
+  }
+
+  async getTopicLessons(topicId: number): Promise<Lesson[]> {
+    return await db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.topicId, topicId))
       .orderBy(asc(lessons.orderIndex));
   }
 
@@ -454,6 +512,24 @@ export class DatabaseStorage implements IStorage {
   async createLesson(lessonData: InsertLesson): Promise<Lesson> {
     const [lesson] = await db.insert(lessons).values(lessonData).returning();
     return lesson;
+  }
+
+  async updateLesson(id: number, lessonData: InsertLesson): Promise<Lesson | undefined> {
+    const [lesson] = await db
+      .update(lessons)
+      .set(lessonData)
+      .where(eq(lessons.id, id))
+      .returning();
+    return lesson;
+  }
+
+  async deleteLesson(id: number): Promise<boolean> {
+    // First delete any lesson progress records
+    await db.delete(lessonProgress).where(eq(lessonProgress.lessonId, id));
+    
+    // Then delete the lesson
+    const result = await db.delete(lessons).where(eq(lessons.id, id));
+    return result.rowCount > 0;
   }
 
   // Enrollment operations

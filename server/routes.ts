@@ -10,11 +10,13 @@ import {
   insertEnrollmentSchema,
   insertReviewSchema,
   insertInstructorSchema,
+  insertTopicSchema,
   insertOrderSchema 
 } from "@shared/schema";
 import { z } from "zod";
 import { paystackService } from "./paystack";
 import { certificateGenerator } from "./certificates";
+import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets (course images and other attachments)
@@ -172,6 +174,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
+  // Course topics
+  app.get("/api/courses/:id/topics", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const topics = await storage.getCourseTopics(courseId);
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching course topics:", error);
+      res.status(500).json({ message: "Failed to fetch course topics" });
+    }
+  });
+
+  // Topic lessons
+  app.get("/api/topics/:id/lessons", async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const lessons = await storage.getTopicLessons(topicId);
+      res.json(lessons);
+    } catch (error) {
+      console.error("Error fetching topic lessons:", error);
+      res.status(500).json({ message: "Failed to fetch topic lessons" });
     }
   });
 
@@ -1028,6 +1054,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting course:", error);
       res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
+  // Topic management routes (admin only)
+  app.post("/api/admin/topics", requireAdminSession, async (req, res) => {
+    try {
+      const topicData = insertTopicSchema.parse(req.body);
+      const topic = await storage.createTopic(topicData);
+      res.json(topic);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid topic data", errors: error.errors });
+      }
+      console.error("Error creating topic:", error);
+      res.status(500).json({ message: "Failed to create topic" });
+    }
+  });
+
+  app.put("/api/admin/topics/:id", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const topicData = insertTopicSchema.parse(req.body);
+      const topic = await storage.updateTopic(topicId, topicData);
+      
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      res.json(topic);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid topic data", errors: error.errors });
+      }
+      console.error("Error updating topic:", error);
+      res.status(500).json({ message: "Failed to update topic" });
+    }
+  });
+
+  app.delete("/api/admin/topics/:id", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const deleted = await storage.deleteTopic(topicId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      res.json({ message: "Topic deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
+    }
+  });
+
+  // Lesson management routes (admin only)
+  app.post("/api/admin/lessons", requireAdminSession, async (req, res) => {
+    try {
+      const lessonData = insertLessonSchema.parse(req.body);
+      const lesson = await storage.createLesson(lessonData);
+      res.json(lesson);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      console.error("Error creating lesson:", error);
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  app.put("/api/admin/lessons/:id", requireAdminSession, async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const lessonData = insertLessonSchema.parse(req.body);
+      const lesson = await storage.updateLesson(lessonId, lessonData);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      res.json(lesson);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      console.error("Error updating lesson:", error);
+      res.status(500).json({ message: "Failed to update lesson" });
+    }
+  });
+
+  app.delete("/api/admin/lessons/:id", requireAdminSession, async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const deleted = await storage.deleteLesson(lessonId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      res.json({ message: "Lesson deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      res.status(500).json({ message: "Failed to delete lesson" });
+    }
+  });
+
+  // Video upload routes
+  app.post("/api/videos/upload", requireAdminSession, async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getVideoUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting video upload URL:", error);
+      res.status(500).json({ message: "Failed to get upload URL" });
+    }
+  });
+
+  app.post("/api/videos/process", requireAdminSession, async (req, res) => {
+    try {
+      const { videoURL } = req.body;
+      if (!videoURL) {
+        return res.status(400).json({ error: "videoURL is required" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const videoPath = objectStorageService.normalizeVideoPath(videoURL);
+
+      res.status(200).json({
+        videoPath: videoPath,
+      });
+    } catch (error) {
+      console.error("Error processing video:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Serve video files
+  app.get("/videos/:videoId(*)", async (req, res) => {
+    try {
+      const videoId = req.params.videoId;
+      const objectStorageService = new ObjectStorageService();
+      const videoFile = await objectStorageService.getVideoFile(`/videos/${videoId}`);
+      objectStorageService.downloadObject(videoFile, res);
+    } catch (error) {
+      console.error("Error serving video:", error);
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
     }
   });
 
