@@ -72,11 +72,11 @@ export default function CourseCard({ course }: CourseCardProps) {
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="font-heading text-3xl font-black text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text">
+          <div className="font-heading text-xl font-bold text-[#0097D7]">
             {course.isFree ? "FREE" : `$${course.price}`}
           </div>
           <Button
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+            className="bg-[#0097D7] hover:bg-[#0085C3] text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
             onClick={() => window.location.href = `/courses/${course.id}`}
           >
             {course.isFree ? "Enroll Now" : "View Course"}

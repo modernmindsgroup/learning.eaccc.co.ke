@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BookOpen, Award, Clock, ArrowRight, MessageSquare, Trophy, FileCheck, Calendar } from "lucide-react";
 import type { CourseWithInstructor, Enrollment } from "@shared/schema";
 
@@ -160,64 +162,52 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Club Points Section */}
-      <section className="bg-gradient-to-br from-amber-50 via-orange-50/30 to-red-50/20 py-20">
+      {/* Newsletter Section */}
+      <section className="bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/20 py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="order-2 lg:order-1 space-y-6">
               <h2 className="font-heading text-3xl lg:text-4xl font-bold text-gray-900 tracking-normal leading-tight">
-                Win Club Points
+                Join Us Today
               </h2>
               
               <p className="text-base text-gray-500 leading-relaxed font-normal">
-                Use our platform and win club points according to different activities. You will be able to use your club points to get free prizes and courses. Start using the system now and collect points!
+                Stay updated with the latest courses, learning resources, and exclusive offers from EACCC Learning. Get expert insights delivered directly to your inbox and never miss an opportunity to advance your skills.
               </p>
               
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-soft">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl flex items-center justify-center">
-                    <Trophy className="h-6 w-6 text-white" />
+                <div className="space-y-4">
+                  <Label htmlFor="newsletter-email" className="text-gray-700 font-semibold">Email Address</Label>
+                  <div className="flex space-x-3">
+                    <Input
+                      id="newsletter-email"
+                      type="email"
+                      placeholder="Enter your email address"
+                      className="flex-1 px-4 py-3 rounded-xl border-gray-200 focus:border-[#0097D7] focus:ring-[#0097D7]"
+                      data-testid="input-newsletter-email"
+                    />
+                    <Button 
+                      className="bg-[#0097D7] hover:bg-[#0085C3] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                      data-testid="button-subscribe-newsletter"
+                    >
+                      Subscribe
+                    </Button>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">You earned 50 points!</p>
-                    <p className="text-sm text-gray-500">for completing the course...</p>
-                  </div>
+                  <p className="text-xs text-gray-500">
+                    We respect your privacy. Unsubscribe at any time.
+                  </p>
                 </div>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button 
-                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white px-6 py-3 text-base font-semibold rounded-xl shadow-soft transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                  onClick={() => window.location.href = "/rewards"}
-                >
-                  Rewards
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="border-2 border-blue-200 text-blue-600 hover:bg-blue-50 px-6 py-3 text-base font-semibold rounded-xl transition-all duration-300 hover:shadow-md"
-                  onClick={() => window.location.href = "/points"}
-                >
-                  Points Club
-                </Button>
               </div>
             </div>
             
             <div className="order-1 lg:order-2 relative">
-              <div className="absolute -top-8 -right-8 w-80 h-80 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-full opacity-20"></div>
+              <div className="absolute -top-8 -right-8 w-80 h-80 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full opacity-20"></div>
               <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl shadow-soft p-8">
-                <div className="w-full h-64 bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 rounded-2xl flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/20 to-red-400/20"></div>
-                  <div className="relative">
-                    <div className="w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl">
-                      <Trophy className="h-12 w-12 text-white" />
-                    </div>
-                    {/* Floating confetti elements */}
-                    <div className="absolute -top-4 -left-8 w-6 h-6 bg-pink-400 rounded transform rotate-45"></div>
-                    <div className="absolute -top-8 right-4 w-4 h-4 bg-blue-400 rounded-full"></div>
-                    <div className="absolute -bottom-6 -right-4 w-5 h-5 bg-green-400 rounded transform rotate-12"></div>
-                    <div className="absolute -bottom-8 left-8 w-3 h-3 bg-purple-400 rounded-full"></div>
-                  </div>
-                </div>
+                <img 
+                  src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&h=400"
+                  alt="Professional learning environment"
+                  className="w-full h-64 object-cover rounded-2xl shadow-lg"
+                />
               </div>
             </div>
           </div>
