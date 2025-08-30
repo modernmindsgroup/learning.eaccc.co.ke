@@ -2,6 +2,7 @@ import {
   users,
   instructors,
   courses,
+  topics,
   lessons,
   enrollments,
   lessonProgress,
@@ -17,6 +18,8 @@ import {
   type InsertCourse,
   type CourseWithInstructor,
   type CourseWithProgress,
+  type Topic,
+  type InsertTopic,
   type Lesson,
   type InsertLesson,
   type Enrollment,
@@ -61,10 +64,22 @@ export interface IStorage {
   getFreeCourses(limit?: number): Promise<CourseWithInstructor[]>;
   getFeaturedCourses(): Promise<CourseWithInstructor[]>;
 
+  // Topic operations
+  getCourseTopics(courseId: number): Promise<Topic[]>;
+  createTopic(topic: InsertTopic): Promise<Topic>;
+  updateTopic(id: number, topic: Partial<InsertTopic>): Promise<Topic | undefined>;
+  deleteTopic(id: number): Promise<boolean>;
+  duplicateTopic(id: number): Promise<Topic>;
+  reorderTopics(courseId: number, topicOrders: { id: number; orderIndex: number }[]): Promise<void>;
+
   // Lesson operations
   getCourseLessons(courseId: number): Promise<Lesson[]>;
+  getTopicLessons(topicId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
+  updateLesson(id: number, lesson: Partial<InsertLesson>): Promise<Lesson | undefined>;
+  deleteLesson(id: number): Promise<boolean>;
+  reorderLessons(topicId: number, lessonOrders: { id: number; orderIndex: number }[]): Promise<void>;
 
   // Enrollment operations
   enrollUser(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -437,12 +452,111 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(courses.rating));
   }
 
+  // Topic operations
+  async getCourseTopics(courseId: number): Promise<Topic[]> {
+    return await db
+      .select()
+      .from(topics)
+      .where(eq(topics.courseId, courseId))
+      .orderBy(asc(topics.orderIndex));
+  }
+
+  async createTopic(topicData: InsertTopic): Promise<Topic> {
+    const [topic] = await db.insert(topics).values(topicData).returning();
+    return topic;
+  }
+
+  async updateTopic(id: number, topicData: Partial<InsertTopic>): Promise<Topic | undefined> {
+    const [topic] = await db
+      .update(topics)
+      .set({
+        ...topicData,
+        updatedAt: new Date(),
+      })
+      .where(eq(topics.id, id))
+      .returning();
+    return topic;
+  }
+
+  async deleteTopic(id: number): Promise<boolean> {
+    // First delete all lessons in this topic
+    await db.delete(lessons).where(eq(lessons.topicId, id));
+    // Then delete the topic
+    const result = await db.delete(topics).where(eq(topics.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async duplicateTopic(id: number): Promise<Topic> {
+    const originalTopic = await db.select().from(topics).where(eq(topics.id, id));
+    if (!originalTopic[0]) throw new Error("Topic not found");
+
+    const topic = originalTopic[0];
+    const topicLessons = await this.getTopicLessons(id);
+    
+    // Get next order index
+    const [maxOrder] = await db
+      .select({ max: sql<number>`max(${topics.orderIndex})` })
+      .from(topics)
+      .where(eq(topics.courseId, topic.courseId));
+    
+    const newOrderIndex = (maxOrder.max || 0) + 1;
+
+    // Create duplicate topic
+    const [newTopic] = await db
+      .insert(topics)
+      .values({
+        courseId: topic.courseId,
+        title: `${topic.title} (Copy)`,
+        orderIndex: newOrderIndex,
+      })
+      .returning();
+
+    // Duplicate lessons
+    for (const lesson of topicLessons) {
+      await this.createLesson({
+        courseId: lesson.courseId,
+        topicId: newTopic.id,
+        title: lesson.title,
+        description: lesson.description,
+        content: lesson.content,
+        videoUrl: lesson.videoUrl,
+        duration: lesson.duration,
+        orderIndex: lesson.orderIndex,
+        sectionTitle: lesson.sectionTitle,
+        sectionOrder: lesson.sectionOrder,
+        isLocked: lesson.isLocked,
+        isPreview: lesson.isPreview,
+        isRequired: lesson.isRequired,
+        completeOnVideoEnd: lesson.completeOnVideoEnd,
+      });
+    }
+
+    return newTopic;
+  }
+
+  async reorderTopics(courseId: number, topicOrders: { id: number; orderIndex: number }[]): Promise<void> {
+    for (const { id, orderIndex } of topicOrders) {
+      await db
+        .update(topics)
+        .set({ orderIndex, updatedAt: new Date() })
+        .where(eq(topics.id, id));
+    }
+  }
+
   // Lesson operations
   async getCourseLessons(courseId: number): Promise<Lesson[]> {
     return await db
       .select()
       .from(lessons)
       .where(eq(lessons.courseId, courseId))
+      .orderBy(asc(lessons.orderIndex));
+  }
+
+  async getTopicLessons(topicId: number): Promise<Lesson[]> {
+    return await db
+      .select()
+      .from(lessons)
+      .where(eq(lessons.topicId, topicId))
       .orderBy(asc(lessons.orderIndex));
   }
 
@@ -454,6 +568,32 @@ export class DatabaseStorage implements IStorage {
   async createLesson(lessonData: InsertLesson): Promise<Lesson> {
     const [lesson] = await db.insert(lessons).values(lessonData).returning();
     return lesson;
+  }
+
+  async updateLesson(id: number, lessonData: Partial<InsertLesson>): Promise<Lesson | undefined> {
+    const [lesson] = await db
+      .update(lessons)
+      .set({
+        ...lessonData,
+        updatedAt: new Date(),
+      })
+      .where(eq(lessons.id, id))
+      .returning();
+    return lesson;
+  }
+
+  async deleteLesson(id: number): Promise<boolean> {
+    const result = await db.delete(lessons).where(eq(lessons.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async reorderLessons(topicId: number, lessonOrders: { id: number; orderIndex: number }[]): Promise<void> {
+    for (const { id, orderIndex } of lessonOrders) {
+      await db
+        .update(lessons)
+        .set({ orderIndex, updatedAt: new Date() })
+        .where(eq(lessons.id, id));
+    }
   }
 
   // Enrollment operations

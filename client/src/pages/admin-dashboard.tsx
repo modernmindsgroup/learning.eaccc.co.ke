@@ -36,7 +36,8 @@ import {
   Edit,
   Trash2,
   Crown,
-  GraduationCap
+  GraduationCap,
+  Settings
 } from "lucide-react";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
@@ -105,16 +106,19 @@ export default function AdminDashboard() {
   // Create course mutation
   const createCourseMutation = useMutation({
     mutationFn: async (data: any) => {
-      await apiRequest("POST", "/api/admin/courses", data);
+      const response = await apiRequest("POST", "/api/admin/courses", data);
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (course: Course) => {
       toast({
         title: "Success",
-        description: "Course created successfully!",
+        description: "Course created successfully! Opening Course Builder...",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/courses"] });
       resetCourseForm();
       setIsCreateCourseOpen(false);
+      // Navigate to Course Builder for the newly created course
+      setLocation(`/admin/course-builder/${course.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -886,8 +890,18 @@ export default function AdminDashboard() {
                             <Button 
                               variant="outline" 
                               size="sm"
+                              onClick={() => setLocation(`/admin/course-builder/${course.id}`)}
+                              data-testid={`button-course-builder-${course.id}`}
+                              title="Course Builder"
+                            >
+                              <Settings className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
                               onClick={() => openEditCourse(course)}
                               data-testid={`button-edit-course-${course.id}`}
+                              title="Edit Course"
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
@@ -896,6 +910,7 @@ export default function AdminDashboard() {
                               size="sm"
                               onClick={() => deleteCourseMutation.mutate(course.id)}
                               data-testid={`button-delete-course-${course.id}`}
+                              title="Delete Course"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>

@@ -1,0 +1,846 @@
+import { useState, useEffect } from "react";
+import { useRoute } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Loader2, Plus, GripVertical, ChevronDown, ChevronRight, Edit2, Trash2, Copy, Eye, Lock, Play, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { Course, Topic, Lesson } from "@shared/schema";
+
+interface TopicWithLessons extends Topic {
+  lessons: Lesson[];
+}
+
+export default function CourseBuilderPage() {
+  const [match, params] = useRoute("/admin/course-builder/:courseId");
+  const courseId = match && params ? parseInt(params.courseId) : null;
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [topicDialogOpen, setTopicDialogOpen] = useState(false);
+  const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch course data
+  const { data: course, isLoading: courseLoading } = useQuery<Course>({
+    queryKey: ["/api/admin/course", courseId],
+    enabled: !!courseId,
+  });
+
+  // Fetch topics with lessons
+  const { data: topics = [], isLoading: topicsLoading } = useQuery<TopicWithLessons[]>({
+    queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"],
+    enabled: !!courseId,
+    queryFn: async () => {
+      // First fetch topics
+      const topicsResponse = await fetch(`/api/admin/courses/${courseId}/topics`);
+      const topicsData: Topic[] = await topicsResponse.json();
+      
+      // Then fetch lessons for each topic
+      const topicsWithLessons: TopicWithLessons[] = await Promise.all(
+        topicsData.map(async (topic) => {
+          const lessonsResponse = await fetch(`/api/admin/topics/${topic.id}/lessons`);
+          const lessons: Lesson[] = await lessonsResponse.json();
+          return { ...topic, lessons };
+        })
+      );
+      
+      return topicsWithLessons;
+    },
+  });
+
+  // Topic operations
+  const createTopicMutation = useMutation({
+    mutationFn: async (topicData: { title: string; orderIndex: number }) => {
+      const response = await apiRequest("POST", `/api/admin/courses/${courseId}/topics`, topicData);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      setTopicDialogOpen(false);
+      toast({ title: "Success", description: "Topic created successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create topic", variant: "destructive" });
+    },
+  });
+
+  const updateTopicMutation = useMutation({
+    mutationFn: async (data: { id: number; updates: Partial<Topic> }) => {
+      const response = await apiRequest("PUT", `/api/admin/topics/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      toast({ title: "Success", description: "Topic updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update topic", variant: "destructive" });
+    },
+  });
+
+  const deleteTopicMutation = useMutation({
+    mutationFn: async (topicId: number) => {
+      await apiRequest("DELETE", `/api/admin/topics/${topicId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      toast({ title: "Success", description: "Topic deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete topic", variant: "destructive" });
+    },
+  });
+
+  const duplicateTopicMutation = useMutation({
+    mutationFn: async (topicId: number) => {
+      const response = await apiRequest("POST", `/api/admin/topics/${topicId}/duplicate`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      toast({ title: "Success", description: "Topic duplicated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to duplicate topic", variant: "destructive" });
+    },
+  });
+
+  // Lesson operations
+  const createLessonMutation = useMutation({
+    mutationFn: async (data: { topicId: number; lessonData: Partial<Lesson> }) => {
+      const response = await apiRequest("POST", `/api/admin/topics/${data.topicId}/lessons`, {
+        ...data.lessonData,
+        courseId: courseId!,
+        orderIndex: (topics.find(t => t.id === selectedTopic?.id)?.lessons?.length || 0),
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      setLessonDialogOpen(false);
+      toast({ title: "Success", description: "Lesson created successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to create lesson", variant: "destructive" });
+    },
+  });
+
+  const updateLessonMutation = useMutation({
+    mutationFn: async (data: { id: number; updates: Partial<Lesson> }) => {
+      const response = await apiRequest("PUT", `/api/admin/lessons/${data.id}`, data.updates);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      toast({ title: "Success", description: "Lesson updated successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to update lesson", variant: "destructive" });
+    },
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async (lessonId: number) => {
+      await apiRequest("DELETE", `/api/admin/lessons/${lessonId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses", courseId, "topics-with-lessons"] });
+      toast({ title: "Success", description: "Lesson deleted successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to delete lesson", variant: "destructive" });
+    },
+  });
+
+  // Topic form handlers
+  const handleCreateTopic = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title") as string;
+    if (!title.trim()) return;
+
+    createTopicMutation.mutate({
+      title: title.trim(),
+      orderIndex: topics.length,
+    });
+  };
+
+  // Lesson form handlers
+  const handleCreateLesson = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!selectedTopic) return;
+
+    const formData = new FormData(e.currentTarget);
+    const title = formData.get("title") as string;
+    const description = formData.get("description") as string;
+    const videoUrl = formData.get("videoUrl") as string;
+    const duration = parseInt(formData.get("duration") as string) || 0;
+    
+    if (!title.trim()) return;
+
+    createLessonMutation.mutate({
+      topicId: selectedTopic.id,
+      lessonData: {
+        title: title.trim(),
+        description: description?.trim(),
+        videoUrl: videoUrl?.trim(),
+        duration: duration.toString(),
+        isPreview: formData.get("isPreview") === "on",
+        isRequired: formData.get("isRequired") === "on",
+        completeOnVideoEnd: formData.get("completeOnVideoEnd") === "on",
+      },
+    });
+  };
+
+  // Toggle topic expansion
+  const toggleTopicExpansion = (topicId: number) => {
+    setExpandedTopics(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(topicId)) {
+        newSet.delete(topicId);
+      } else {
+        newSet.add(topicId);
+      }
+      return newSet;
+    });
+  };
+
+  // Inline editing
+  const handleTopicTitleEdit = (topic: Topic, newTitle: string) => {
+    if (newTitle.trim() && newTitle !== topic.title) {
+      updateTopicMutation.mutate({
+        id: topic.id,
+        updates: { title: newTitle.trim() },
+      });
+    }
+  };
+
+  const handleLessonUpdate = (lesson: Lesson, updates: Partial<Lesson>) => {
+    updateLessonMutation.mutate({
+      id: lesson.id,
+      updates,
+    });
+  };
+
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  if (!courseId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center">
+        <Card className="p-8">
+          <CardHeader>
+            <CardTitle className="text-red-600">Invalid Course</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Course ID not found in URL. Please navigate from the admin dashboard.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (courseLoading || topicsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin text-[#0097D7]" />
+          <span>Loading course builder...</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Course Builder
+              </h1>
+              <p className="text-gray-600 text-lg">
+                {course?.title || "Loading course..."}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setPreviewMode(!previewMode)}
+                className="border-[#0097D7] text-[#0097D7] hover:bg-[#0097D7] hover:text-white"
+                data-testid="button-preview-toggle"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                {previewMode ? "Edit Mode" : "Preview Mode"}
+              </Button>
+              <Button className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-publish-course">
+                Publish Course
+              </Button>
+            </div>
+          </div>
+          
+          {/* Course stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm text-gray-600">Topics</div>
+                <div className="text-2xl font-bold text-[#0097D7]">{topics.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm text-gray-600">Total Lessons</div>
+                <div className="text-2xl font-bold text-[#0097D7]">
+                  {topics.reduce((sum, topic) => sum + topic.lessons.length, 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm text-gray-600">Total Duration</div>
+                <div className="text-2xl font-bold text-[#0097D7]">
+                  {formatDuration(topics.reduce((sum, topic) => 
+                    sum + topic.lessons.reduce((lessonSum, lesson) => lessonSum + (Number(lesson.duration) || 0), 0), 0
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm text-gray-600">Preview Lessons</div>
+                <div className="text-2xl font-bold text-[#0097D7]">
+                  {topics.reduce((sum, topic) => 
+                    sum + topic.lessons.filter(lesson => lesson.isPreview).length, 0
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Course Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Topics and Lessons Panel */}
+          <div className="lg:col-span-2">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl">Course Content</CardTitle>
+                  <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-add-topic">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Topic
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Topic</DialogTitle>
+                        <DialogDescription>
+                          Create a new topic to organize your lessons
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleCreateTopic} className="space-y-4">
+                        <div>
+                          <Label htmlFor="title">Topic Title</Label>
+                          <Input
+                            id="title"
+                            name="title"
+                            placeholder="Enter topic title"
+                            required
+                            data-testid="input-topic-title"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2">
+                          <Button type="button" variant="outline" onClick={() => setTopicDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button type="submit" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-create-topic">
+                            Create Topic
+                          </Button>
+                        </div>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {topics.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="text-gray-400 mb-4">
+                      <Play className="h-12 w-12 mx-auto mb-2" />
+                      <p>No topics created yet</p>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Start by creating your first topic to organize your course content
+                    </p>
+                    <Button 
+                      onClick={() => setTopicDialogOpen(true)} 
+                      className="bg-[#0097D7] hover:bg-[#0097D7]/90"
+                      data-testid="button-create-first-topic"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create First Topic
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {topics.map((topic, topicIndex) => (
+                      <Card key={topic.id} className="border border-gray-200">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <GripVertical className="h-5 w-5 text-gray-400 cursor-grab" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleTopicExpansion(topic.id)}
+                                className="p-0 h-auto"
+                                data-testid={`button-toggle-topic-${topic.id}`}
+                              >
+                                {expandedTopics.has(topic.id) ? (
+                                  <ChevronDown className="h-4 w-4" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <div className="flex-1">
+                                <Input
+                                  defaultValue={topic.title}
+                                  onBlur={(e) => handleTopicTitleEdit(topic, e.target.value)}
+                                  className="border-none bg-transparent p-0 text-lg font-semibold focus:bg-white focus:border-gray-300"
+                                  data-testid={`input-topic-title-${topic.id}`}
+                                />
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {topic.lessons.length} lesson{topic.lessons.length !== 1 ? 's' : ''} •{' '}
+                                  {formatDuration(topic.lessons.reduce((sum, lesson) => sum + (Number(lesson.duration) || 0), 0))}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedTopic(topic);
+                                  setLessonDialogOpen(true);
+                                }}
+                                data-testid={`button-add-lesson-${topic.id}`}
+                              >
+                                <Plus className="h-4 w-4 mr-1" />
+                                Add Lesson
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => duplicateTopicMutation.mutate(topic.id)}
+                                data-testid={`button-duplicate-topic-${topic.id}`}
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deleteTopicMutation.mutate(topic.id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                data-testid={`button-delete-topic-${topic.id}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        {expandedTopics.has(topic.id) && (
+                          <CardContent className="pt-0">
+                            <div className="space-y-3">
+                              {topic.lessons.map((lesson, lessonIndex) => (
+                                <Card key={lesson.id} className="border border-gray-100 bg-gray-50/50">
+                                  <CardContent className="p-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3 flex-1">
+                                        <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Input
+                                              defaultValue={lesson.title}
+                                              onBlur={(e) => handleLessonUpdate(lesson, { title: e.target.value })}
+                                              className="border-none bg-transparent p-0 font-medium text-gray-900 focus:bg-white focus:border-gray-300"
+                                              data-testid={`input-lesson-title-${lesson.id}`}
+                                            />
+                                            <div className="flex items-center gap-1">
+                                              {lesson.isPreview && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  <Eye className="h-3 w-3 mr-1" />
+                                                  Preview
+                                                </Badge>
+                                              )}
+                                              {lesson.isRequired && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                                  Required
+                                                </Badge>
+                                              )}
+                                              {lesson.isLocked && (
+                                                <Badge variant="secondary" className="text-xs">
+                                                  <Lock className="h-3 w-3 mr-1" />
+                                                  Locked
+                                                </Badge>
+                                              )}
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                                            <span>{formatDuration(Number(lesson.duration) || 0)}</span>
+                                            {lesson.videoUrl && (
+                                              <span className="flex items-center gap-1">
+                                                <Play className="h-3 w-3" />
+                                                Video
+                                              </span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setSelectedLesson(lesson)}
+                                          data-testid={`button-edit-lesson-${lesson.id}`}
+                                        >
+                                          <Edit2 className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => deleteLessonMutation.mutate(lesson.id)}
+                                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                          data-testid={`button-delete-lesson-${lesson.id}`}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              ))}
+                              
+                              {topic.lessons.length === 0 && (
+                                <div className="text-center py-8 text-gray-500">
+                                  <p>No lessons in this topic yet</p>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedTopic(topic);
+                                      setLessonDialogOpen(true);
+                                    }}
+                                    className="mt-2"
+                                    data-testid={`button-add-first-lesson-${topic.id}`}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Add First Lesson
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Lesson Details Panel */}
+          <div className="lg:col-span-1">
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl sticky top-8">
+              <CardHeader>
+                <CardTitle className="text-xl">
+                  {selectedLesson ? "Lesson Details" : "Course Settings"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedLesson ? (
+                  <div className="space-y-6">
+                    <div>
+                      <Label htmlFor="lesson-title">Lesson Title</Label>
+                      <Input
+                        id="lesson-title"
+                        defaultValue={selectedLesson.title}
+                        onBlur={(e) => handleLessonUpdate(selectedLesson, { title: e.target.value })}
+                        data-testid="input-lesson-detail-title"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="lesson-description">Description</Label>
+                      <Textarea
+                        id="lesson-description"
+                        defaultValue={selectedLesson.description || ""}
+                        onBlur={(e) => handleLessonUpdate(selectedLesson, { description: e.target.value })}
+                        placeholder="Lesson description..."
+                        rows={4}
+                        data-testid="input-lesson-description"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="lesson-video">Video URL</Label>
+                      <Input
+                        id="lesson-video"
+                        defaultValue={selectedLesson.videoUrl || ""}
+                        onBlur={(e) => handleLessonUpdate(selectedLesson, { videoUrl: e.target.value })}
+                        placeholder="https://..."
+                        data-testid="input-lesson-video"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="lesson-duration">Duration (minutes)</Label>
+                      <Input
+                        id="lesson-duration"
+                        type="number"
+                        defaultValue={selectedLesson.duration || "0"}
+                        onBlur={(e) => handleLessonUpdate(selectedLesson, { duration: e.target.value || "0" })}
+                        data-testid="input-lesson-duration"
+                      />
+                    </div>
+
+                    <Separator />
+
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900">Lesson Settings</h4>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="preview-switch" className="text-sm">
+                          Free Preview
+                        </Label>
+                        <Switch
+                          id="preview-switch"
+                          checked={selectedLesson.isPreview ?? false}
+                          onCheckedChange={(checked) => handleLessonUpdate(selectedLesson, { isPreview: checked })}
+                          data-testid="switch-lesson-preview"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="required-switch" className="text-sm">
+                          Required Lesson
+                        </Label>
+                        <Switch
+                          id="required-switch"
+                          checked={selectedLesson.isRequired ?? false}
+                          onCheckedChange={(checked) => handleLessonUpdate(selectedLesson, { isRequired: checked })}
+                          data-testid="switch-lesson-required"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="auto-complete-switch" className="text-sm">
+                          Auto-complete on video end
+                        </Label>
+                        <Switch
+                          id="auto-complete-switch"
+                          checked={selectedLesson.completeOnVideoEnd ?? false}
+                          onCheckedChange={(checked) => handleLessonUpdate(selectedLesson, { completeOnVideoEnd: checked })}
+                          data-testid="switch-lesson-auto-complete"
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setSelectedLesson(null)}
+                      data-testid="button-close-lesson-details"
+                    >
+                      Close Details
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Quick Actions</h4>
+                      <div className="space-y-2">
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setTopicDialogOpen(true)}
+                          data-testid="button-quick-add-topic"
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Topic
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => setPreviewMode(!previewMode)}
+                          data-testid="button-quick-preview"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          {previewMode ? "Exit Preview" : "Preview Course"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <h4 className="font-medium text-gray-900 mb-3">Course Progress</h4>
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-sm">
+                          <span>Topics Created</span>
+                          <span className="font-medium">{topics.length}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Lessons Added</span>
+                          <span className="font-medium">
+                            {topics.reduce((sum, topic) => sum + topic.lessons.length, 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span>Preview Lessons</span>
+                          <span className="font-medium">
+                            {topics.reduce((sum, topic) => 
+                              sum + topic.lessons.filter(lesson => lesson.isPreview).length, 0
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Add Lesson Dialog */}
+        <Dialog open={lessonDialogOpen} onOpenChange={setLessonDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add New Lesson</DialogTitle>
+              <DialogDescription>
+                Add a new lesson to {selectedTopic?.title}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateLesson} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="lesson-title">Lesson Title</Label>
+                  <Input
+                    id="lesson-title"
+                    name="title"
+                    placeholder="Enter lesson title"
+                    required
+                    data-testid="input-new-lesson-title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lesson-duration">Duration (minutes)</Label>
+                  <Input
+                    id="lesson-duration"
+                    name="duration"
+                    type="number"
+                    placeholder="0"
+                    data-testid="input-new-lesson-duration"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="lesson-description">Description</Label>
+                <Textarea
+                  id="lesson-description"
+                  name="description"
+                  placeholder="Lesson description..."
+                  rows={3}
+                  data-testid="input-new-lesson-description"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="lesson-video">Video URL</Label>
+                <Input
+                  id="lesson-video"
+                  name="videoUrl"
+                  placeholder="https://..."
+                  data-testid="input-new-lesson-video"
+                />
+              </div>
+
+              <div className="flex items-center gap-6">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isPreview"
+                    name="isPreview"
+                    className="rounded"
+                    data-testid="checkbox-new-lesson-preview"
+                  />
+                  <Label htmlFor="isPreview" className="text-sm">
+                    Free Preview
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isRequired"
+                    name="isRequired"
+                    className="rounded"
+                    data-testid="checkbox-new-lesson-required"
+                  />
+                  <Label htmlFor="isRequired" className="text-sm">
+                    Required
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="completeOnVideoEnd"
+                    name="completeOnVideoEnd"
+                    className="rounded"
+                    data-testid="checkbox-new-lesson-auto-complete"
+                  />
+                  <Label htmlFor="completeOnVideoEnd" className="text-sm">
+                    Auto-complete
+                  </Label>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setLessonDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-create-lesson">
+                  Create Lesson
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+  );
+}

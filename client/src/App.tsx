@@ -14,6 +14,7 @@ import Learning from "@/pages/learning";
 import Dashboard from "@/pages/dashboard";
 import AdminDashboard from "@/pages/admin-dashboard";
 import AdminLogin from "@/pages/admin-login";
+import CourseBuilder from "@/pages/course-builder";
 import InstructorDashboard from "@/pages/instructor-dashboard";
 import InstructorLogin from "@/pages/instructor-login";
 import Demo from "@/pages/demo";
@@ -57,6 +58,7 @@ function Router() {
       
       {/* Admin Dashboard - requires admin role */}
       <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/course-builder/:courseId" component={CourseBuilder} />
       
       {/* Instructor Dashboard - requires instructor or admin role */}
       <Route path="/instructor" component={InstructorDashboard} />

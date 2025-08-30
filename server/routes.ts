@@ -6,6 +6,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { requireAdmin, requireInstructor, requireInstructorOrAdmin } from "./auth";
 import { 
   insertCourseSchema, 
+  insertTopicSchema,
   insertLessonSchema,
   insertEnrollmentSchema,
   insertReviewSchema,
@@ -1028,6 +1029,167 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting course:", error);
       res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
+  // Topic Management Routes (Admin only)
+  app.get("/api/admin/courses/:courseId/topics", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const topics = await storage.getCourseTopics(courseId);
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching topics:", error);
+      res.status(500).json({ message: "Failed to fetch topics" });
+    }
+  });
+
+  app.post("/api/admin/courses/:courseId/topics", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const topicData = insertTopicSchema.parse({
+        ...req.body,
+        courseId,
+      });
+      const topic = await storage.createTopic(topicData);
+      res.json(topic);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid topic data", errors: error.errors });
+      }
+      console.error("Error creating topic:", error);
+      res.status(500).json({ message: "Failed to create topic" });
+    }
+  });
+
+  app.put("/api/admin/topics/:id", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const topicData = req.body;
+      const topic = await storage.updateTopic(topicId, topicData);
+      
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      res.json(topic);
+    } catch (error) {
+      console.error("Error updating topic:", error);
+      res.status(500).json({ message: "Failed to update topic" });
+    }
+  });
+
+  app.delete("/api/admin/topics/:id", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const deleted = await storage.deleteTopic(topicId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      res.json({ message: "Topic deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting topic:", error);
+      res.status(500).json({ message: "Failed to delete topic" });
+    }
+  });
+
+  app.post("/api/admin/topics/:id/duplicate", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const newTopic = await storage.duplicateTopic(topicId);
+      res.json(newTopic);
+    } catch (error) {
+      console.error("Error duplicating topic:", error);
+      res.status(500).json({ message: "Failed to duplicate topic" });
+    }
+  });
+
+  app.put("/api/admin/courses/:courseId/topics/reorder", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const { topicOrders } = req.body;
+      await storage.reorderTopics(courseId, topicOrders);
+      res.json({ message: "Topics reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering topics:", error);
+      res.status(500).json({ message: "Failed to reorder topics" });
+    }
+  });
+
+  // Lesson Management Routes (Admin only)
+  app.get("/api/admin/topics/:topicId/lessons", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.topicId);
+      const lessons = await storage.getTopicLessons(topicId);
+      res.json(lessons);
+    } catch (error) {
+      console.error("Error fetching lessons:", error);
+      res.status(500).json({ message: "Failed to fetch lessons" });
+    }
+  });
+
+  app.post("/api/admin/topics/:topicId/lessons", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.topicId);
+      const lessonData = insertLessonSchema.parse({
+        ...req.body,
+        topicId,
+      });
+      const lesson = await storage.createLesson(lessonData);
+      res.json(lesson);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid lesson data", errors: error.errors });
+      }
+      console.error("Error creating lesson:", error);
+      res.status(500).json({ message: "Failed to create lesson" });
+    }
+  });
+
+  app.put("/api/admin/lessons/:id", requireAdminSession, async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const lessonData = req.body;
+      const lesson = await storage.updateLesson(lessonId, lessonData);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      res.json(lesson);
+    } catch (error) {
+      console.error("Error updating lesson:", error);
+      res.status(500).json({ message: "Failed to update lesson" });
+    }
+  });
+
+  app.delete("/api/admin/lessons/:id", requireAdminSession, async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.id);
+      const deleted = await storage.deleteLesson(lessonId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      res.json({ message: "Lesson deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      res.status(500).json({ message: "Failed to delete lesson" });
+    }
+  });
+
+  app.put("/api/admin/topics/:topicId/lessons/reorder", requireAdminSession, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.topicId);
+      const { lessonOrders } = req.body;
+      await storage.reorderLessons(topicId, lessonOrders);
+      res.json({ message: "Lessons reordered successfully" });
+    } catch (error) {
+      console.error("Error reordering lessons:", error);
+      res.status(500).json({ message: "Failed to reorder lessons" });
     }
   });
 
