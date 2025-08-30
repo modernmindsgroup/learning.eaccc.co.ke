@@ -17,28 +17,28 @@ export default function StatsSection() {
       description: "Start learning from experienced instructors.",
       value: stats?.instructorCount || 2,
       icon: Presentation,
-      bgColor: "bg-gradient-to-br from-blue-500 to-blue-600",
+      bgColor: "bg-gradient-to-br from-sky-400 to-blue-600",
     },
     {
       title: "Happy Students",
       description: "Enrolled in our courses and improved their skills.",
       value: stats?.studentCount || 11,
       icon: Users,
-      bgColor: "bg-gradient-to-br from-pink-500 to-pink-600",
+      bgColor: "bg-gradient-to-br from-pink-400 to-rose-600",
     },
     {
       title: "Live Classes", 
       description: "Improve your skills using live knowledge flow.",
       value: 0,
       icon: MonitorPlay,
-      bgColor: "bg-gradient-to-br from-green-500 to-green-600",
+      bgColor: "bg-gradient-to-br from-emerald-400 to-green-600",
     },
     {
       title: "Video Courses",
       description: "Learn without any geographical & time limitations.",
       value: stats?.courseCount || 4,
       icon: Video,
-      bgColor: "bg-gradient-to-br from-red-500 to-red-600",
+      bgColor: "bg-gradient-to-br from-orange-400 to-red-600",
     },
   ];
 
