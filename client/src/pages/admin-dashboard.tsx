@@ -442,13 +442,19 @@ export default function AdminDashboard() {
                           return;
                         }
                         
+                        const priceValue = parseFloat(courseForm.price) || 0;
                         createCourseMutation.mutate({
                           title: courseForm.title,
                           description: courseForm.description,
                           instructorId: parseInt(courseForm.instructorId),
-                          price: parseFloat(courseForm.price) || 0,
+                          price: priceValue.toFixed(2), // Send as string for decimal field
                           category: courseForm.category,
-                          isFree: !courseForm.price || parseFloat(courseForm.price) === 0
+                          isFree: priceValue === 0,
+                          level: "Beginner", // Add required level field
+                          hasQuiz: false,
+                          hasCertificate: true,
+                          isFeatured: false,
+                          isBestseller: false
                         });
                       }}
                       disabled={createCourseMutation.isPending}
@@ -542,7 +548,7 @@ export default function AdminDashboard() {
                       <Label htmlFor="instructor-expertise">Expertise</Label>
                       <Input 
                         id="instructor-expertise" 
-                        placeholder="e.g., Customer Service, Leadership"
+                        placeholder="e.g., Customer Service, Leadership (comma-separated)"
                         value={instructorForm.expertise}
                         onChange={(e) => setInstructorForm({...instructorForm, expertise: e.target.value})}
                       />
@@ -571,7 +577,7 @@ export default function AdminDashboard() {
                         createInstructorMutation.mutate({
                           name: instructorForm.name,
                           email: instructorForm.email,
-                          expertise: instructorForm.expertise,
+                          expertise: instructorForm.expertise.split(",").map(s => s.trim()).filter(s => s.length > 0),
                           bio: instructorForm.bio
                         });
                       }}
