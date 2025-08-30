@@ -58,12 +58,21 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isCreateInstructorOpen, setIsCreateInstructorOpen] = useState(false);
   const [isCreateCourseOpen, setIsCreateCourseOpen] = useState(false);
+  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [courseForm, setCourseForm] = useState({
     title: "",
     description: "",
     instructorId: "",
     price: "",
-    category: ""
+    category: "",
+    duration: "",
+    level: "Beginner",
+    thumbnailUrl: "",
+    hasQuiz: false,
+    hasCertificate: true,
+    isFeatured: false,
+    isBestseller: false
   });
   const [instructorForm, setInstructorForm] = useState({
     name: "",
@@ -104,7 +113,7 @@ export default function AdminDashboard() {
         description: "Course created successfully!",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/courses"] });
-      setCourseForm({ title: "", description: "", instructorId: "", price: "", category: "" });
+      resetCourseForm();
       setIsCreateCourseOpen(false);
     },
     onError: (error: any) => {
@@ -115,6 +124,87 @@ export default function AdminDashboard() {
       });
     },
   });
+
+  // Update course mutation
+  const updateCourseMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      await apiRequest("PUT", `/api/admin/courses/${id}`, data);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Course updated successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses"] });
+      resetCourseForm();
+      setIsEditCourseOpen(false);
+      setEditingCourse(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update course",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete course mutation
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (courseId: number) => {
+      await apiRequest("DELETE", `/api/admin/courses/${courseId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Course deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/courses"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete course",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetCourseForm = () => {
+    setCourseForm({
+      title: "",
+      description: "",
+      instructorId: "",
+      price: "",
+      category: "",
+      duration: "",
+      level: "Beginner",
+      thumbnailUrl: "",
+      hasQuiz: false,
+      hasCertificate: true,
+      isFeatured: false,
+      isBestseller: false
+    });
+  };
+
+  const openEditCourse = (course: Course) => {
+    setEditingCourse(course);
+    setCourseForm({
+      title: course.title,
+      description: course.description || "",
+      instructorId: course.instructorId?.toString() || "",
+      price: course.price || "0",
+      category: course.category || "",
+      duration: course.duration || "",
+      level: course.level || "Beginner",
+      thumbnailUrl: course.thumbnailUrl || "",
+      hasQuiz: course.hasQuiz || false,
+      hasCertificate: course.hasCertificate || true,
+      isFeatured: course.isFeatured || false,
+      isBestseller: course.isBestseller || false
+    });
+    setIsEditCourseOpen(true);
+  };
 
   // Create instructor mutation
   const createInstructorMutation = useMutation({
@@ -361,74 +451,166 @@ export default function AdminDashboard() {
                     Create Course
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create New Course</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="course-title">Course Title</Label>
-                      <Input 
-                        id="course-title" 
-                        placeholder="Enter course title"
-                        value={courseForm.title}
-                        onChange={(e) => setCourseForm({...courseForm, title: e.target.value})}
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="course-title">Course Title *</Label>
+                        <Input 
+                          id="course-title" 
+                          placeholder="Enter course title"
+                          value={courseForm.title}
+                          onChange={(e) => setCourseForm({...courseForm, title: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="course-duration">Duration</Label>
+                        <Input 
+                          id="course-duration" 
+                          placeholder="e.g., 2:30 Hours"
+                          value={courseForm.duration}
+                          onChange={(e) => setCourseForm({...courseForm, duration: e.target.value})}
+                        />
+                      </div>
                     </div>
+                    
                     <div>
-                      <Label htmlFor="course-description">Description</Label>
+                      <Label htmlFor="course-description">Description *</Label>
                       <Textarea 
                         id="course-description" 
                         placeholder="Enter course description"
                         value={courseForm.description}
+                        rows={3}
                         onChange={(e) => setCourseForm({...courseForm, description: e.target.value})}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="course-category">Category</Label>
-                      <Select 
-                        value={courseForm.category}
-                        onValueChange={(value) => setCourseForm({...courseForm, category: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="customer-service">Customer Service</SelectItem>
-                          <SelectItem value="leadership">Leadership</SelectItem>
-                          <SelectItem value="business-development">Business Development</SelectItem>
-                          <SelectItem value="communication">Communication</SelectItem>
-                          <SelectItem value="technology">Technology</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="course-category">Category *</Label>
+                        <Select 
+                          value={courseForm.category}
+                          onValueChange={(value) => setCourseForm({...courseForm, category: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer-service">Customer Service</SelectItem>
+                            <SelectItem value="leadership">Leadership</SelectItem>
+                            <SelectItem value="business-development">Business Development</SelectItem>
+                            <SelectItem value="communication">Communication</SelectItem>
+                            <SelectItem value="technology">Technology</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="course-level">Level</Label>
+                        <Select 
+                          value={courseForm.level}
+                          onValueChange={(value) => setCourseForm({...courseForm, level: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Beginner">Beginner</SelectItem>
+                            <SelectItem value="Intermediate">Intermediate</SelectItem>
+                            <SelectItem value="Advanced">Advanced</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="course-price">Price (USD)</Label>
+                        <Input 
+                          id="course-price" 
+                          type="number"
+                          step="0.01"
+                          placeholder="0 for free course"
+                          value={courseForm.price}
+                          onChange={(e) => setCourseForm({...courseForm, price: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="course-instructor">Instructor *</Label>
+                        <Select 
+                          value={courseForm.instructorId}
+                          onValueChange={(value) => setCourseForm({...courseForm, instructorId: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select instructor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {instructors?.map((instructor) => (
+                              <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                {instructor.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
                     <div>
-                      <Label htmlFor="course-price">Price (USD)</Label>
+                      <Label htmlFor="course-thumbnail">Thumbnail URL</Label>
                       <Input 
-                        id="course-price" 
-                        type="number"
-                        placeholder="0 for free course"
-                        value={courseForm.price}
-                        onChange={(e) => setCourseForm({...courseForm, price: e.target.value})}
+                        id="course-thumbnail" 
+                        placeholder="https://example.com/image.jpg"
+                        value={courseForm.thumbnailUrl}
+                        onChange={(e) => setCourseForm({...courseForm, thumbnailUrl: e.target.value})}
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="course-instructor">Instructor</Label>
-                      <Select 
-                        value={courseForm.instructorId}
-                        onValueChange={(value) => setCourseForm({...courseForm, instructorId: value})}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select instructor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {instructors?.map((instructor) => (
-                            <SelectItem key={instructor.id} value={instructor.id.toString()}>
-                              {instructor.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    
+                    <div className="space-y-3">
+                      <Label>Course Features</Label>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="has-quiz"
+                            checked={courseForm.hasQuiz}
+                            onChange={(e) => setCourseForm({...courseForm, hasQuiz: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="has-quiz">Has Quiz</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="has-certificate"
+                            checked={courseForm.hasCertificate}
+                            onChange={(e) => setCourseForm({...courseForm, hasCertificate: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="has-certificate">Has Certificate</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="is-featured"
+                            checked={courseForm.isFeatured}
+                            onChange={(e) => setCourseForm({...courseForm, isFeatured: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="is-featured">Featured Course</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="is-bestseller"
+                            checked={courseForm.isBestseller}
+                            onChange={(e) => setCourseForm({...courseForm, isBestseller: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="is-bestseller">Bestseller</Label>
+                        </div>
+                      </div>
                     </div>
                     <Button 
                       className="w-full"
@@ -447,19 +629,227 @@ export default function AdminDashboard() {
                           title: courseForm.title,
                           description: courseForm.description,
                           instructorId: parseInt(courseForm.instructorId),
-                          price: priceValue.toFixed(2), // Send as string for decimal field
+                          price: priceValue.toFixed(2),
                           category: courseForm.category,
+                          duration: courseForm.duration,
+                          level: courseForm.level,
+                          thumbnailUrl: courseForm.thumbnailUrl,
                           isFree: priceValue === 0,
-                          level: "Beginner", // Add required level field
-                          hasQuiz: false,
-                          hasCertificate: true,
-                          isFeatured: false,
-                          isBestseller: false
+                          hasQuiz: courseForm.hasQuiz,
+                          hasCertificate: courseForm.hasCertificate,
+                          isFeatured: courseForm.isFeatured,
+                          isBestseller: courseForm.isBestseller
                         });
                       }}
                       disabled={createCourseMutation.isPending}
                     >
                       {createCourseMutation.isPending ? "Creating..." : "Create Course"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              
+              {/* Edit Course Dialog */}
+              <Dialog open={isEditCourseOpen} onOpenChange={setIsEditCourseOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Edit Course</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="edit-course-title">Course Title *</Label>
+                        <Input 
+                          id="edit-course-title" 
+                          placeholder="Enter course title"
+                          value={courseForm.title}
+                          onChange={(e) => setCourseForm({...courseForm, title: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-course-duration">Duration</Label>
+                        <Input 
+                          id="edit-course-duration" 
+                          placeholder="e.g., 2:30 Hours"
+                          value={courseForm.duration}
+                          onChange={(e) => setCourseForm({...courseForm, duration: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit-course-description">Description *</Label>
+                      <Textarea 
+                        id="edit-course-description" 
+                        placeholder="Enter course description"
+                        value={courseForm.description}
+                        rows={3}
+                        onChange={(e) => setCourseForm({...courseForm, description: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="edit-course-category">Category *</Label>
+                        <Select 
+                          value={courseForm.category}
+                          onValueChange={(value) => setCourseForm({...courseForm, category: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer-service">Customer Service</SelectItem>
+                            <SelectItem value="leadership">Leadership</SelectItem>
+                            <SelectItem value="business-development">Business Development</SelectItem>
+                            <SelectItem value="communication">Communication</SelectItem>
+                            <SelectItem value="technology">Technology</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-course-level">Level</Label>
+                        <Select 
+                          value={courseForm.level}
+                          onValueChange={(value) => setCourseForm({...courseForm, level: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Beginner">Beginner</SelectItem>
+                            <SelectItem value="Intermediate">Intermediate</SelectItem>
+                            <SelectItem value="Advanced">Advanced</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="edit-course-price">Price (USD)</Label>
+                        <Input 
+                          id="edit-course-price" 
+                          type="number"
+                          step="0.01"
+                          placeholder="0 for free course"
+                          value={courseForm.price}
+                          onChange={(e) => setCourseForm({...courseForm, price: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="edit-course-instructor">Instructor *</Label>
+                        <Select 
+                          value={courseForm.instructorId}
+                          onValueChange={(value) => setCourseForm({...courseForm, instructorId: value})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select instructor" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {instructors?.map((instructor) => (
+                              <SelectItem key={instructor.id} value={instructor.id.toString()}>
+                                {instructor.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="edit-course-thumbnail">Thumbnail URL</Label>
+                      <Input 
+                        id="edit-course-thumbnail" 
+                        placeholder="https://example.com/image.jpg"
+                        value={courseForm.thumbnailUrl}
+                        onChange={(e) => setCourseForm({...courseForm, thumbnailUrl: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <Label>Course Features</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="edit-has-quiz"
+                            checked={courseForm.hasQuiz}
+                            onChange={(e) => setCourseForm({...courseForm, hasQuiz: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="edit-has-quiz">Has Quiz</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="edit-has-certificate"
+                            checked={courseForm.hasCertificate}
+                            onChange={(e) => setCourseForm({...courseForm, hasCertificate: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="edit-has-certificate">Has Certificate</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="edit-is-featured"
+                            checked={courseForm.isFeatured}
+                            onChange={(e) => setCourseForm({...courseForm, isFeatured: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="edit-is-featured">Featured Course</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <input 
+                            type="checkbox"
+                            id="edit-is-bestseller"
+                            checked={courseForm.isBestseller}
+                            onChange={(e) => setCourseForm({...courseForm, isBestseller: e.target.checked})}
+                            className="rounded"
+                          />
+                          <Label htmlFor="edit-is-bestseller">Bestseller</Label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      className="w-full"
+                      onClick={() => {
+                        if (!courseForm.title || !courseForm.description || !courseForm.instructorId || !courseForm.category) {
+                          toast({
+                            title: "Missing Information",
+                            description: "Please fill in all required fields",
+                            variant: "destructive",
+                          });
+                          return;
+                        }
+                        
+                        const priceValue = parseFloat(courseForm.price) || 0;
+                        if (editingCourse) {
+                          updateCourseMutation.mutate({
+                            id: editingCourse.id,
+                            data: {
+                              title: courseForm.title,
+                              description: courseForm.description,
+                              instructorId: parseInt(courseForm.instructorId),
+                              price: priceValue.toFixed(2),
+                              category: courseForm.category,
+                              duration: courseForm.duration,
+                              level: courseForm.level,
+                              thumbnailUrl: courseForm.thumbnailUrl,
+                              isFree: priceValue === 0,
+                              hasQuiz: courseForm.hasQuiz,
+                              hasCertificate: courseForm.hasCertificate,
+                              isFeatured: courseForm.isFeatured,
+                              isBestseller: courseForm.isBestseller
+                            }
+                          });
+                        }
+                      }}
+                      disabled={updateCourseMutation.isPending}
+                    >
+                      {updateCourseMutation.isPending ? "Updating..." : "Update Course"}
                     </Button>
                   </div>
                 </DialogContent>
@@ -493,10 +883,20 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditCourse(course)}
+                              data-testid={`button-edit-course-${course.id}`}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteCourse(course.id)}
+                              data-testid={`button-delete-course-${course.id}`}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>

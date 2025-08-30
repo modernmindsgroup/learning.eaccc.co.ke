@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
@@ -990,6 +990,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error creating course:", error);
       res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  // Update course (admin only)
+  app.put("/api/admin/courses/:id", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const courseData = insertCourseSchema.parse(req.body);
+      const course = await storage.updateCourse(courseId, courseData);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json(course);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid course data", errors: error.errors });
+      }
+      console.error("Error updating course:", error);
+      res.status(500).json({ message: "Failed to update course" });
+    }
+  });
+
+  // Delete course (admin only)
+  app.delete("/api/admin/courses/:id", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const deleted = await storage.deleteCourse(courseId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
     }
   });
 

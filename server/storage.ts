@@ -55,6 +55,8 @@ export interface IStorage {
   getCourse(id: number): Promise<CourseWithInstructor | undefined>;
   getCourseWithProgress(id: number, userId?: string): Promise<CourseWithProgress | undefined>;
   createCourse(course: InsertCourse): Promise<Course>;
+  updateCourse(id: number, course: InsertCourse): Promise<Course | undefined>;
+  deleteCourse(id: number): Promise<boolean>;
   getNewestCourses(limit?: number): Promise<CourseWithInstructor[]>;
   getFreeCourses(limit?: number): Promise<CourseWithInstructor[]>;
   getFeaturedCourses(): Promise<CourseWithInstructor[]>;
@@ -304,6 +306,23 @@ export class DatabaseStorage implements IStorage {
   async createCourse(courseData: InsertCourse): Promise<Course> {
     const [course] = await db.insert(courses).values(courseData).returning();
     return course;
+  }
+
+  async updateCourse(id: number, courseData: InsertCourse): Promise<Course | undefined> {
+    const [course] = await db
+      .update(courses)
+      .set({
+        ...courseData,
+        updatedAt: new Date(),
+      })
+      .where(eq(courses.id, id))
+      .returning();
+    return course;
+  }
+
+  async deleteCourse(id: number): Promise<boolean> {
+    const result = await db.delete(courses).where(eq(courses.id, id));
+    return (result.rowCount || 0) > 0;
   }
 
   async getNewestCourses(limit = 6): Promise<CourseWithInstructor[]> {
