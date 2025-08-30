@@ -31,10 +31,15 @@ export default function Home() {
     <div className="min-h-screen bg-eaccc-bg">
       <Header />
       
-      {/* Hero Section with additional Dashboard button */}
-      <section className="relative bg-gradient-to-r from-eaccc-blue to-blue-600 text-white">
-        {/* Background overlay */}
-        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+      {/* Hero Section with learner image background */}
+      <section 
+        className="relative bg-cover bg-center bg-no-repeat text-white"
+        style={{
+          backgroundImage: `url('/attached_assets/generated_images/African_learners_studying_together_7d5857c2.png')`
+        }}
+      >
+        {/* Background overlay for text readability */}
+        <div className="absolute inset-0 bg-black bg-opacity-50"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="max-w-3xl">

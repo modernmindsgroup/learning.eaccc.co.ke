@@ -2,9 +2,20 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Search, Menu, X, GraduationCap, User, LogOut } from "lucide-react";
 
 export default function Header() {
@@ -30,14 +41,13 @@ export default function Header() {
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Logo Section */}
           <div className="flex items-center space-x-4">
             <a href="/" className="flex items-center">
-              <img 
-                src="/attached_assets/East Africa_1756481469423.png" 
-                alt="EACCC - East Africa Customer Care Center Ltd" 
-                className="h-28 w-auto"
+              <img
+                src="/attached_assets/East Africa_1756481469423.png"
+                alt="EACCC - East Africa Customer Care Center Ltd"
+                className="h-40 w-auto"
               />
             </a>
           </div>
@@ -45,7 +55,8 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navigation.map((item) => {
-              const isActive = window.location.pathname === item.href || 
+              const isActive =
+                window.location.pathname === item.href ||
                 (item.href === "/" && window.location.pathname === "/");
               return (
                 <a
@@ -65,7 +76,6 @@ export default function Header() {
 
           {/* Search and Actions */}
           <div className="flex items-center space-x-4">
-            
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="hidden md:flex relative">
               <div className="relative">
@@ -95,33 +105,48 @@ export default function Header() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                  >
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || ""} />
+                      <AvatarImage
+                        src={user?.profileImageUrl || undefined}
+                        alt={user?.firstName || ""}
+                      />
                       <AvatarFallback>
-                        {(user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')}
+                        {(user?.firstName?.[0] || "") +
+                          (user?.lastName?.[0] || "")}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem onClick={() => window.location.href = "/dashboard"}>
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "/dashboard")}
+                  >
                     <User className="mr-2 h-4 w-4" />
                     Dashboard
                   </DropdownMenuItem>
                   {user?.role === "admin" && (
-                    <DropdownMenuItem onClick={() => window.location.href = "/admin"}>
+                    <DropdownMenuItem
+                      onClick={() => (window.location.href = "/admin")}
+                    >
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Admin Dashboard
                     </DropdownMenuItem>
                   )}
                   {(user?.role === "instructor" || user?.role === "admin") && (
-                    <DropdownMenuItem onClick={() => window.location.href = "/instructor"}>
+                    <DropdownMenuItem
+                      onClick={() => (window.location.href = "/instructor")}
+                    >
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Instructor Dashboard
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => window.location.href = "/api/logout"}>
+                  <DropdownMenuItem
+                    onClick={() => (window.location.href = "/api/logout")}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </DropdownMenuItem>
@@ -132,13 +157,13 @@ export default function Header() {
                 <Button
                   variant="outline"
                   className="hidden md:block text-eaccc-blue hover:bg-eaccc-blue hover:text-white border-eaccc-blue"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => (window.location.href = "/api/login")}
                 >
                   Login
                 </Button>
                 <Button
                   className="bg-eaccc-orange hover:bg-orange-600 text-white"
-                  onClick={() => window.location.href = "/api/login"}
+                  onClick={() => (window.location.href = "/api/login")}
                 >
                   Register
                 </Button>
@@ -151,7 +176,11 @@ export default function Header() {
               className="md:hidden p-2 text-gray-600"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {mobileMenuOpen ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
           </div>
         </div>
@@ -160,7 +189,6 @@ export default function Header() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 py-4">
             <div className="space-y-4">
-              
               {/* Mobile Search */}
               <form onSubmit={handleSearch} className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -193,13 +221,13 @@ export default function Header() {
                   <Button
                     variant="outline"
                     className="w-full text-eaccc-blue border-eaccc-blue"
-                    onClick={() => window.location.href = "/api/login"}
+                    onClick={() => (window.location.href = "/api/login")}
                   >
                     Login
                   </Button>
                   <Button
                     className="w-full bg-eaccc-orange hover:bg-orange-600 text-white"
-                    onClick={() => window.location.href = "/api/login"}
+                    onClick={() => (window.location.href = "/api/login")}
                   >
                     Register
                   </Button>
