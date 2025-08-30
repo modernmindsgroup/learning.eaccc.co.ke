@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +16,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Menu, X, GraduationCap, User, LogOut } from "lucide-react";
+import { Search, Menu, X, GraduationCap, User, LogOut, Phone, Mail } from "lucide-react";
 
 export default function Header() {
   const { isAuthenticated, user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Handle scroll to hide/show top bar
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,200 +45,73 @@ export default function Header() {
   const navigation = [
     { name: "Home", href: "/" },
     { name: "Courses", href: "/courses" },
+    { name: "Instructors", href: "/instructors" },
     ...(isAuthenticated ? [{ name: "Dashboard", href: "/dashboard" }] : []),
     { name: "Contact", href: "/contact" },
   ];
 
   return (
-    <header className="bg-white/95 backdrop-blur-lg shadow-soft border-b border-gray-100/50 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo Section */}
-          <div className="flex items-center space-x-4">
-            <a href="/" className="flex items-center">
-              <img
-                src="/attached_assets/East Africa_1756481469423.png"
-                alt="EACCC - East Africa Customer Care Center Ltd"
-                className="h-40 w-auto"
-              />
-            </a>
-          </div>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => {
-              const isActive =
-                window.location.pathname === item.href ||
-                (item.href === "/" && window.location.pathname === "/");
-              return (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className={`pb-4 transition-colors ${
-                    isActive
-                      ? "text-eaccc-blue font-medium border-b-2 border-eaccc-blue"
-                      : "text-gray-600 hover:text-eaccc-blue"
-                  }`}
-                >
-                  {item.name}
-                </a>
-              );
-            })}
-          </nav>
-
-          {/* Search and Actions */}
-          <div className="flex items-center space-x-4">
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="hidden md:flex relative">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-eaccc-blue focus:border-transparent"
-                />
+    <header className="sticky top-0 z-50">
+      {/* Top Bar - Disappears on scroll */}
+      <div className={`bg-gray-50 border-b border-gray-200 transition-all duration-300 ${
+        isScrolled ? 'transform -translate-y-full opacity-0 h-0' : 'h-auto'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-10 text-sm">
+            {/* Contact Info */}
+            <div className="hidden md:flex items-center space-x-6 text-gray-600">
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4" />
+                <span>(254) 540-999</span>
               </div>
-            </form>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4" />
+                <span>learning@eaccc.co.ke</span>
+              </div>
+            </div>
 
-            {/* Currency Selector */}
-            <Select defaultValue="KES">
-              <SelectTrigger className="w-20 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-eaccc-blue">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="KES">KES</SelectItem>
-                <SelectItem value="USD">USD</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Auth Section */}
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="relative h-8 w-8 rounded-full"
-                  >
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage
-                        src={user?.profileImageUrl || undefined}
-                        alt={user?.firstName || ""}
-                      />
-                      <AvatarFallback>
-                        {(user?.firstName?.[0] || "") +
-                          (user?.lastName?.[0] || "")}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuItem
-                    onClick={() => (window.location.href = "/dashboard")}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  {user?.role === "admin" && (
-                    <DropdownMenuItem
-                      onClick={() => (window.location.href = "/admin")}
-                    >
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </DropdownMenuItem>
-                  )}
-                  {(user?.role === "instructor" || user?.role === "admin") && (
-                    <DropdownMenuItem
-                      onClick={() => (window.location.href = "/instructor")}
-                    >
-                      <GraduationCap className="mr-2 h-4 w-4" />
-                      Instructor Dashboard
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem
-                    onClick={() => (window.location.href = "/api/logout")}
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <>
-                <Button
-                  variant="outline"
-                  className="hidden md:block text-eaccc-blue hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white border-eaccc-blue font-semibold px-6 py-2 rounded-xl transition-all duration-300 hover:shadow-md"
-                  onClick={() => (window.location.href = "/api/login")}
-                >
-                  Login
-                </Button>
-                <Button
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-                  onClick={() => (window.location.href = "/api/login")}
-                >
-                  Register
-                </Button>
-              </>
-            )}
-
-            {/* Mobile Menu Button */}
-            <Button
-              variant="ghost"
-              className="md:hidden p-2 text-gray-600"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
-            <div className="space-y-4">
-              {/* Mobile Search */}
-              <form onSubmit={handleSearch} className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder="Search courses..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2"
-                />
+            {/* Top Right - Search and Currency */}
+            <div className="flex items-center space-x-4">
+              {/* Search Bar */}
+              <form onSubmit={handleSearch} className="hidden md:flex relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-2.5 h-3 w-3 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="w-48 h-8 pl-8 pr-4 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-eaccc-blue focus:border-transparent"
+                  />
+                </div>
               </form>
 
-              {/* Mobile Navigation */}
-              <nav className="space-y-2">
-                {navigation.map((item) => (
-                  <a
-                    key={item.name}
-                    href={item.href}
-                    className="block px-3 py-2 text-gray-600 hover:text-eaccc-blue hover:bg-gray-50 rounded-md"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </a>
-                ))}
-              </nav>
+              {/* Currency Selector */}
+              <Select defaultValue="KES">
+                <SelectTrigger className="w-16 h-8 border border-gray-300 rounded px-2 py-1 text-xs focus:ring-1 focus:ring-eaccc-blue">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KES">KES</SelectItem>
+                  <SelectItem value="USD">USD</SelectItem>
+                </SelectContent>
+              </Select>
 
-              {/* Mobile Auth */}
+              {/* Top Auth Buttons */}
               {!isAuthenticated && (
-                <div className="space-y-2 pt-4 border-t border-gray-200">
+                <div className="hidden md:flex items-center space-x-2">
                   <Button
-                    variant="outline"
-                    className="w-full text-eaccc-blue border-eaccc-blue"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-gray-600 hover:text-eaccc-blue"
                     onClick={() => (window.location.href = "/api/login")}
                   >
                     Login
                   </Button>
                   <Button
-                    className="w-full bg-eaccc-orange hover:bg-orange-600 text-white"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-gray-600 hover:text-eaccc-blue"
                     onClick={() => (window.location.href = "/api/login")}
                   >
                     Register
@@ -235,7 +120,175 @@ export default function Header() {
               )}
             </div>
           </div>
-        )}
+        </div>
+      </div>
+
+      {/* Main Navigation Bar - Always visible */}
+      <div className="bg-white/95 backdrop-blur-lg shadow-soft border-b border-gray-100/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo Section */}
+            <div className="flex items-center space-x-4">
+              <a href="/" className="flex items-center">
+                <img
+                  src="/attached_assets/East Africa_1756481469423.png"
+                  alt="EACCC - East Africa Customer Care Center Ltd"
+                  className="h-40 w-auto"
+                />
+              </a>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              {navigation.map((item) => {
+                const isActive =
+                  window.location.pathname === item.href ||
+                  (item.href === "/" && window.location.pathname === "/");
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className={`pb-4 transition-colors ${
+                      isActive
+                        ? "text-eaccc-blue font-medium border-b-2 border-eaccc-blue"
+                        : "text-gray-600 hover:text-eaccc-blue"
+                    }`}
+                  >
+                    {item.name}
+                  </a>
+                );
+              })}
+            </nav>
+
+            {/* Right Actions */}
+            <div className="flex items-center space-x-4">
+              {/* Start Learning Button or User Menu */}
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage
+                          src={user?.profileImageUrl || undefined}
+                          alt={user?.firstName || ""}
+                        />
+                        <AvatarFallback>
+                          {(user?.firstName?.[0] || "") +
+                            (user?.lastName?.[0] || "")}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuItem
+                      onClick={() => (window.location.href = "/dashboard")}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </DropdownMenuItem>
+                    {user?.role === "admin" && (
+                      <DropdownMenuItem
+                        onClick={() => (window.location.href = "/admin")}
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    {(user?.role === "instructor" || user?.role === "admin") && (
+                      <DropdownMenuItem
+                        onClick={() => (window.location.href = "/instructor")}
+                      >
+                        <GraduationCap className="mr-2 h-4 w-4" />
+                        Instructor Dashboard
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => (window.location.href = "/api/logout")}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  className="bg-gradient-to-r from-[#0097D7] to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold px-6 py-2 rounded-xl transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                  onClick={() => (window.location.href = "/api/login")}
+                >
+                  Start Learning
+                </Button>
+              )}
+
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                className="md:hidden p-2 text-gray-600"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <Menu className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-4">
+              <div className="space-y-4">
+                {/* Mobile Search */}
+                <form onSubmit={handleSearch} className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Search courses..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2"
+                  />
+                </form>
+
+                {/* Mobile Navigation */}
+                <nav className="space-y-2">
+                  {navigation.map((item) => (
+                    <a
+                      key={item.name}
+                      href={item.href}
+                      className="block px-3 py-2 text-gray-600 hover:text-eaccc-blue hover:bg-gray-50 rounded-md"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {item.name}
+                    </a>
+                  ))}
+                </nav>
+
+                {/* Mobile Auth */}
+                {!isAuthenticated && (
+                  <div className="space-y-2 pt-4 border-t border-gray-200">
+                    <Button
+                      variant="outline"
+                      className="w-full text-eaccc-blue border-eaccc-blue"
+                      onClick={() => (window.location.href = "/api/login")}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      className="w-full bg-eaccc-orange hover:bg-orange-600 text-white"
+                      onClick={() => (window.location.href = "/api/login")}
+                    >
+                      Register
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
