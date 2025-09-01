@@ -31,15 +31,36 @@ export default function CourseBuilderPage() {
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
-  const [videoInputMethod, setVideoInputMethod] = useState<"url" | "upload">("url");
+  const [videoInputMethod, setVideoInputMethod] = useState<"youtube" | "url" | "upload">("youtube");
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string>("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Reset lesson dialog state
   const resetLessonDialog = () => {
-    setVideoInputMethod("url");
+    setVideoInputMethod("youtube");
     setUploadedVideoUrl("");
+  };
+
+  // Helper function to convert YouTube URL to embed format
+  const convertYouTubeToEmbed = (url: string): string => {
+    if (!url) return "";
+    
+    // YouTube URL patterns to match
+    const patterns = [
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/,
+      /(?:https?:\/\/)?(?:www\.)?youtu\.be\/([a-zA-Z0-9_-]+)/,
+      /(?:https?:\/\/)?(?:www\.)?youtube\.com\/embed\/([a-zA-Z0-9_-]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+    
+    return url; // Return original URL if no pattern matches
   };
 
   // Fetch course data
@@ -202,13 +223,25 @@ export default function CourseBuilderPage() {
     const formData = new FormData(e.currentTarget);
     const title = formData.get("title") as string;
     const description = formData.get("description") as string;
+    const youtubeInput = formData.get("youtubeUrl") as string;
     const urlInput = formData.get("videoUrl") as string;
     const duration = parseInt(formData.get("duration") as string) || 0;
     
     if (!title.trim()) return;
 
     // Determine which video URL to use based on input method
-    const videoUrl = videoInputMethod === "upload" ? uploadedVideoUrl : urlInput?.trim();
+    let videoUrl = "";
+    switch (videoInputMethod) {
+      case "youtube":
+        videoUrl = convertYouTubeToEmbed(youtubeInput?.trim() || "");
+        break;
+      case "url":
+        videoUrl = urlInput?.trim() || "";
+        break;
+      case "upload":
+        videoUrl = uploadedVideoUrl;
+        break;
+    }
 
     createLessonMutation.mutate({
       topicId: selectedTopic.id,
@@ -889,27 +922,45 @@ export default function CourseBuilderPage() {
               
               <div>
                 <Label>Video Content</Label>
-                <Tabs value={videoInputMethod} onValueChange={(value) => setVideoInputMethod(value as "url" | "upload")} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                <Tabs value={videoInputMethod} onValueChange={(value) => setVideoInputMethod(value as "youtube" | "url" | "upload")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="youtube" className="flex items-center gap-2">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                      </svg>
+                      YouTube
+                    </TabsTrigger>
                     <TabsTrigger value="url" className="flex items-center gap-2">
                       <Link className="h-4 w-4" />
-                      Video URL
+                      Link
                     </TabsTrigger>
                     <TabsTrigger value="upload" className="flex items-center gap-2">
                       <Upload className="h-4 w-4" />
-                      Upload Video
+                      Upload
                     </TabsTrigger>
                   </TabsList>
+                  
+                  <TabsContent value="youtube" className="mt-4">
+                    <Input
+                      id="lesson-youtube"
+                      name="youtubeUrl"
+                      placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                      data-testid="input-new-lesson-youtube"
+                    />
+                    <p className="text-sm text-gray-600 mt-2">
+                      Enter a YouTube video URL (will be automatically converted to embed format)
+                    </p>
+                  </TabsContent>
                   
                   <TabsContent value="url" className="mt-4">
                     <Input
                       id="lesson-video"
                       name="videoUrl"
-                      placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+                      placeholder="https://vimeo.com/123456789 or https://example.com/video.mp4"
                       data-testid="input-new-lesson-video"
                     />
                     <p className="text-sm text-gray-600 mt-2">
-                      Enter a YouTube, Vimeo, or direct video URL
+                      Enter a Vimeo, direct video URL, or other video link
                     </p>
                   </TabsContent>
                   
