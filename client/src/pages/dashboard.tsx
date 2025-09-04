@@ -68,7 +68,7 @@ export default function Dashboard() {
   }
 
   const completedCourses = enrollments?.filter(e => e.progress === 100) || [];
-  const inProgressCourses = enrollments?.filter(e => e.progress > 0 && e.progress < 100) || [];
+  const inProgressCourses = enrollments?.filter(e => (e.progress || 0) > 0 && (e.progress || 0) < 100) || [];
   const totalLearningHours = enrollments?.reduce((acc, enrollment) => {
     const duration = enrollment.course.duration || "0:00 Hours";
     const hours = parseFloat(duration.split(':')[0]) || 0;
@@ -85,7 +85,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center space-x-6">
             <Avatar className="h-20 w-20">
-              <AvatarImage src={user?.profileImageUrl} alt={user?.firstName || ""} />
+              <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || ""} />
               <AvatarFallback className="text-2xl">
                 {(user?.firstName?.[0] || '') + (user?.lastName?.[0] || '')}
               </AvatarFallback>
@@ -286,7 +286,7 @@ export default function Dashboard() {
                             </Button>
                           </div>
                           <p className="text-xs text-gray-600">
-                            Issued: {new Date(certificate.issuedAt).toLocaleDateString()}
+                            Issued: {certificate.issuedAt ? new Date(certificate.issuedAt).toLocaleDateString() : 'N/A'}
                           </p>
                         </div>
                       ))}
@@ -318,7 +318,7 @@ export default function Dashboard() {
                       <span className="text-sm text-gray-600">Avg. Progress</span>
                       <span className="font-medium">
                         {enrollments && enrollments.length > 0
-                          ? Math.round(enrollments.reduce((acc, e) => acc + e.progress, 0) / enrollments.length)
+                          ? Math.round(enrollments.reduce((acc, e) => acc + (e.progress || 0), 0) / enrollments.length)
                           : 0}%
                       </span>
                     </div>

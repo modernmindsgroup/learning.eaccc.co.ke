@@ -277,7 +277,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const enrollments = await storage.getUserEnrollments(userId);
-      res.json(enrollments);
+      
+      // Calculate real-time progress for each enrollment
+      const enrollmentsWithProgress = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          try {
+            const allLessons = await storage.getCourseLessons(enrollment.courseId || 0);
+            const userProgress = await storage.getUserLessonProgress(userId, enrollment.courseId || 0);
+            const completedCount = userProgress.filter(p => p.completed).length;
+            const calculatedProgress = allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0;
+            
+            // Update the stored progress if it's different
+            if (calculatedProgress !== (enrollment.progress || 0)) {
+              await storage.updateEnrollmentProgress(userId, enrollment.courseId || 0, calculatedProgress);
+            }
+            
+            return {
+              ...enrollment,
+              progress: calculatedProgress
+            };
+          } catch (error) {
+            console.error(`Error calculating progress for course ${enrollment.courseId}:`, error);
+            // Return original enrollment if progress calculation fails
+            return enrollment;
+          }
+        })
+      );
+      
+      res.json(enrollmentsWithProgress);
     } catch (error) {
       console.error("Error fetching user enrollments:", error);
       res.status(500).json({ message: "Failed to fetch enrollments" });
@@ -312,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate and update course progress
         const allLessons = await storage.getCourseLessons(lesson.courseId);
         const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
-        const completedCount = userProgress.filter(p => p.lesson_progress?.completed).length;
+        const completedCount = userProgress.filter(p => p.completed).length;
         const progress = Math.round((completedCount / allLessons.length) * 100);
 
         // Update enrollment progress
@@ -495,7 +522,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           paystackReference: reference,
         });
         console.log("Order created successfully:", order.id, "with reference:", order.paystackReference);
-      } catch (orderError) {
+      } catch (orderError: any) {
         console.error("CRITICAL: Order creation failed:", orderError);
         return res.status(500).json({ message: "Failed to create order", error: orderError.message });
       }
