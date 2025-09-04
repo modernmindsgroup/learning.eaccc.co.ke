@@ -1024,7 +1024,7 @@ export default function CourseBuilderPage() {
                     <Input
                       id="lesson-youtube"
                       name="youtubeUrl"
-                      placeholder="https://www.youtube.com/watch?v=LfINZbTryZs"
+                      placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
                       data-testid="input-new-lesson-youtube"
                     />
                     <p className="text-sm text-gray-600 mt-2">
