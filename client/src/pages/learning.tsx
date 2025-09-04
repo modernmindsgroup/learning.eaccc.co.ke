@@ -137,6 +137,16 @@ export default function Learning() {
           title: "Lesson Completed!",
           description: `Great job! You've completed this lesson. Progress: ${data.progress || 0}%`,
         });
+        
+        // Auto-navigate to next lesson after marking complete
+        setTimeout(() => {
+          if (hasNext && allLessons) {
+            const nextLesson = allLessons[currentLessonIndex + 1];
+            const nextUrl = `/learn/${courseId}/${nextLesson.id}`;
+            window.history.pushState(null, '', nextUrl);
+            window.location.reload();
+          }
+        }, 1000); // Wait 1 second before navigating to next lesson
       }
       
       queryClient.invalidateQueries({ queryKey: ["/api/courses", courseId] });
@@ -484,17 +494,8 @@ export default function Learning() {
             >
               <CheckCircle className="mr-2 h-4 w-4" />
               {currentLesson.completed ? "Completed ✓" : 
-               markCompleteMutation.isPending ? "Marking Complete..." : "Mark Complete"}
-            </Button>
-
-            <Button
-              variant="ghost"
-              onClick={goToNextLesson}
-              disabled={!hasNext}
-              className="text-white hover:bg-white/10 border border-white/20 px-6 py-3"
-            >
-              Next Lesson
-              <ChevronRight className="ml-2 h-4 w-4" />
+               markCompleteMutation.isPending ? "Marking Complete..." : 
+               hasNext ? "Mark Complete & Continue" : "Mark Complete"}
             </Button>
           </div>
         </div>
