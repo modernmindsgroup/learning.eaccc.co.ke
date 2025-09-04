@@ -284,8 +284,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             const allLessons = await storage.getCourseLessons(enrollment.courseId || 0);
             const userProgress = await storage.getUserLessonProgress(userId, enrollment.courseId || 0);
-            // The userProgress contains joined data: {lesson_progress: {...}, lessons: {...}}
-            const completedCount = userProgress.filter(p => p.lesson_progress?.completed).length;
+            // The userProgress now contains: {id, userId, lessonId, completed, completedAt, lesson: {...}}
+            const completedCount = userProgress.filter(p => p.completed).length;
             const calculatedProgress = allLessons.length > 0 ? Math.round((completedCount / allLessons.length) * 100) : 0;
             
             // Update the stored progress if it's different
@@ -340,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate and update course progress
         const allLessons = await storage.getCourseLessons(lesson.courseId);
         const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
-        const completedCount = userProgress.filter(p => p.lesson_progress?.completed).length;
+        const completedCount = userProgress.filter(p => p.completed).length;
         const progress = Math.round((completedCount / allLessons.length) * 100);
 
         // Update enrollment progress

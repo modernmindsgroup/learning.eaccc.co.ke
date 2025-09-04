@@ -690,9 +690,19 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserLessonProgress(userId: string, courseId: number): Promise<LessonProgress[]> {
+  async getUserLessonProgress(userId: string, courseId: number): Promise<any[]> {
     return await db
-      .select()
+      .select({
+        id: lessonProgress.id,
+        userId: lessonProgress.userId,
+        lessonId: lessonProgress.lessonId,
+        completed: lessonProgress.completed,
+        completedAt: lessonProgress.completedAt,
+        lesson: {
+          id: lessons.id,
+          courseId: lessons.courseId,
+        }
+      })
       .from(lessonProgress)
       .leftJoin(lessons, eq(lessonProgress.lessonId, lessons.id))
       .where(and(eq(lessonProgress.userId, userId), eq(lessons.courseId, courseId)));
