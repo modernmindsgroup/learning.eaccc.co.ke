@@ -79,7 +79,7 @@ export default function Learning() {
 
     const lessonWithProgress: LessonWithProgress = {
       ...lesson,
-      completed: lessonProgress?.some(p => p.lessonId === lesson.id && p.completed) || false
+      completed: lessonProgress?.some(p => p.lesson_progress?.lessonId === lesson.id && p.lesson_progress?.completed) || false
     };
 
     section.lessons.push(lessonWithProgress);
