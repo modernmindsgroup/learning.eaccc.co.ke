@@ -253,7 +253,7 @@ export default function CourseBuilderPage() {
         isPreview: formData.get("isPreview") === "on",
         isRequired: formData.get("isRequired") === "on",
         completeOnVideoEnd: formData.get("completeOnVideoEnd") === "on",
-        orderIndex: selectedTopic.lessons?.length || 0,
+        orderIndex: topics.find(t => t.id === selectedTopic.id)?.lessons?.length || 0,
       },
     });
   };
@@ -478,20 +478,23 @@ export default function CourseBuilderPage() {
         </div>
 
         {/* Course Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className={`grid gap-8 ${previewMode ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
           {/* Topics and Lessons Panel */}
-          <div className="lg:col-span-2">
+          <div className={previewMode ? "col-span-1" : "lg:col-span-2"}>
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl">Course Content</CardTitle>
-                  <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-add-topic">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Topic
-                      </Button>
-                    </DialogTrigger>
+                  <CardTitle className="text-xl">
+                    {previewMode ? "Course Overview" : "Course Content"}
+                  </CardTitle>
+                  {!previewMode && (
+                    <Dialog open={topicDialogOpen} onOpenChange={setTopicDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-add-topic">
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Topic
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add New Topic</DialogTitle>
@@ -521,6 +524,7 @@ export default function CourseBuilderPage() {
                       </form>
                     </DialogContent>
                   </Dialog>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -533,16 +537,90 @@ export default function CourseBuilderPage() {
                     <p className="text-sm text-gray-600 mb-4">
                       Start by creating your first topic to organize your course content
                     </p>
-                    <Button 
-                      onClick={() => setTopicDialogOpen(true)} 
-                      className="bg-[#0097D7] hover:bg-[#0097D7]/90"
-                      data-testid="button-create-first-topic"
-                    >
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create First Topic
-                    </Button>
+                    {!previewMode && (
+                      <Button 
+                        onClick={() => setTopicDialogOpen(true)} 
+                        className="bg-[#0097D7] hover:bg-[#0097D7]/90"
+                        data-testid="button-create-first-topic"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create First Topic
+                      </Button>
+                    )}
+                  </div>
+                ) : previewMode ? (
+                  /* PREVIEW MODE - Clean student view */
+                  <div className="space-y-6">
+                    {topics.map((topic, topicIndex) => (
+                      <div key={topic.id} className="border border-gray-200 rounded-lg bg-white">
+                        <div className="p-4 border-b border-gray-100">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleTopicExpansion(topic.id)}
+                                className="p-0 h-auto hover:bg-transparent"
+                                data-testid={`button-preview-toggle-topic-${topic.id}`}
+                              >
+                                {expandedTopics.has(topic.id) ? (
+                                  <ChevronDown className="h-5 w-5 text-[#0097D7]" />
+                                ) : (
+                                  <ChevronRight className="h-5 w-5 text-[#0097D7]" />
+                                )}
+                              </Button>
+                              <div className="flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900">{topic.title}</h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {topic.lessons.filter(lesson => lesson.isPreview || !lesson.isLocked).length} lesson{topic.lessons.filter(lesson => lesson.isPreview || !lesson.isLocked).length !== 1 ? 's' : ''} •{' '}
+                                  {formatDuration(topic.lessons.reduce((sum, lesson) => sum + (Number(lesson.duration) || 0), 0))}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {expandedTopics.has(topic.id) && (
+                          <div className="p-4">
+                            <div className="space-y-2">
+                              {topic.lessons.map((lesson, lessonIndex) => (
+                                <div key={lesson.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                                  <div className="flex-shrink-0">
+                                    {lesson.videoUrl ? (
+                                      <Play className="h-4 w-4 text-[#0097D7]" />
+                                    ) : (
+                                      <div className="h-4 w-4 rounded-full bg-gray-300"></div>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-gray-900 truncate">{lesson.title}</h4>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      <span className="text-sm text-gray-600">{formatDuration(Number(lesson.duration) || 0)}</span>
+                                      {lesson.isPreview && (
+                                        <Badge variant="outline" className="text-xs border-[#0097D7] text-[#0097D7]">
+                                          Preview
+                                        </Badge>
+                                      )}
+                                      {lesson.isRequired && (
+                                        <Badge variant="outline" className="text-xs border-green-500 text-green-600">
+                                          Required
+                                        </Badge>
+                                      )}
+                                      {lesson.isLocked && !lesson.isPreview && (
+                                        <Lock className="h-3 w-3 text-gray-400" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 ) : (
+                  /* EDIT MODE - Full editor view */
                   <div className="space-y-4">
                     {topics.map((topic, topicIndex) => (
                       <Card key={topic.id} className="border border-gray-200">
@@ -712,14 +790,15 @@ export default function CourseBuilderPage() {
             </Card>
           </div>
 
-          {/* Lesson Details Panel */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl sticky top-8">
-              <CardHeader>
-                <CardTitle className="text-xl">
-                  {selectedLesson ? "Lesson Details" : "Course Settings"}
-                </CardTitle>
-              </CardHeader>
+          {/* Lesson Details Panel - Only show in edit mode */}
+          {!previewMode && (
+            <div className="lg:col-span-1">
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl sticky top-8">
+                <CardHeader>
+                  <CardTitle className="text-xl">
+                    {selectedLesson ? "Lesson Details" : "Course Settings"}
+                  </CardTitle>
+                </CardHeader>
               <CardContent>
                 {selectedLesson ? (
                   <div className="space-y-6">
@@ -873,7 +952,8 @@ export default function CourseBuilderPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Add Lesson Dialog */}
