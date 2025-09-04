@@ -312,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate and update course progress
         const allLessons = await storage.getCourseLessons(lesson.courseId);
         const userProgress = await storage.getUserLessonProgress(userId, lesson.courseId);
-        const completedCount = userProgress.filter(p => p.completed).length;
+        const completedCount = userProgress.filter(p => p.lesson_progress?.completed).length;
         const progress = Math.round((completedCount / allLessons.length) * 100);
 
         // Update enrollment progress
