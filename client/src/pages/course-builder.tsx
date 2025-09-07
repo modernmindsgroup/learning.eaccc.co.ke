@@ -910,6 +910,37 @@ export default function CourseBuilderPage() {
                                 data-testid="input-lesson-file-url"
                               />
                             </div>
+                            <div>
+                              <Label>Upload PDF File</Label>
+                              <ObjectUploader
+                                maxNumberOfFiles={1}
+                                maxFileSize={52428800} // 50MB
+                                allowedFileTypes={['.pdf']}
+                                onGetUploadParameters={async () => {
+                                  const response = await apiRequest("POST", "/api/objects/upload");
+                                  const data = await response.json();
+                                  return {
+                                    method: "PUT" as const,
+                                    url: data.uploadURL,
+                                  };
+                                }}
+                                onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                                  if (result.successful && result.successful.length > 0) {
+                                    const uploadedFile = result.successful[0];
+                                    const fileUrl = uploadedFile.uploadURL;
+                                    handleLessonUpdate(selectedLesson, { fileUrl: fileUrl || "" });
+                                    toast({
+                                      title: "PDF uploaded successfully",
+                                      description: "Your PDF document is ready to use in the lesson.",
+                                    });
+                                  }
+                                }}
+                                buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Choose PDF File
+                              </ObjectUploader>
+                            </div>
                           </div>
                         </TabsContent>
                         
@@ -936,6 +967,37 @@ export default function CourseBuilderPage() {
                                 data-testid="input-lesson-file-url-ppt"
                               />
                             </div>
+                            <div>
+                              <Label>Upload PowerPoint File</Label>
+                              <ObjectUploader
+                                maxNumberOfFiles={1}
+                                maxFileSize={52428800} // 50MB
+                                allowedFileTypes={['.pptx', '.ppt']}
+                                onGetUploadParameters={async () => {
+                                  const response = await apiRequest("POST", "/api/objects/upload");
+                                  const data = await response.json();
+                                  return {
+                                    method: "PUT" as const,
+                                    url: data.uploadURL,
+                                  };
+                                }}
+                                onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                                  if (result.successful && result.successful.length > 0) {
+                                    const uploadedFile = result.successful[0];
+                                    const fileUrl = uploadedFile.uploadURL;
+                                    handleLessonUpdate(selectedLesson, { fileUrl: fileUrl || "" });
+                                    toast({
+                                      title: "PowerPoint uploaded successfully",
+                                      description: "Your presentation is ready to use in the lesson.",
+                                    });
+                                  }
+                                }}
+                                buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Choose PowerPoint File
+                              </ObjectUploader>
+                            </div>
                           </div>
                         </TabsContent>
                         
@@ -961,6 +1023,37 @@ export default function CourseBuilderPage() {
                                 placeholder="Word document file URL..."
                                 data-testid="input-lesson-file-url-doc"
                               />
+                            </div>
+                            <div>
+                              <Label>Upload Word Document</Label>
+                              <ObjectUploader
+                                maxNumberOfFiles={1}
+                                maxFileSize={52428800} // 50MB
+                                allowedFileTypes={['.docx', '.doc']}
+                                onGetUploadParameters={async () => {
+                                  const response = await apiRequest("POST", "/api/objects/upload");
+                                  const data = await response.json();
+                                  return {
+                                    method: "PUT" as const,
+                                    url: data.uploadURL,
+                                  };
+                                }}
+                                onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                                  if (result.successful && result.successful.length > 0) {
+                                    const uploadedFile = result.successful[0];
+                                    const fileUrl = uploadedFile.uploadURL;
+                                    handleLessonUpdate(selectedLesson, { fileUrl: fileUrl || "" });
+                                    toast({
+                                      title: "Word document uploaded successfully",
+                                      description: "Your document is ready to use in the lesson.",
+                                    });
+                                  }
+                                }}
+                                buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                              >
+                                <FileText className="h-4 w-4 mr-2" />
+                                Choose Word Document
+                              </ObjectUploader>
                             </div>
                           </div>
                         </TabsContent>
