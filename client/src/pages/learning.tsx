@@ -23,6 +23,7 @@ import {
   Settings,
   MoreHorizontal
 } from "lucide-react";
+import { DocumentViewer } from "@/components/DocumentViewer";
 import type { CourseWithProgress, Lesson } from "@shared/schema";
 
 interface LessonWithProgress extends Lesson {
@@ -431,14 +432,32 @@ export default function Learning() {
           <div className="flex-1 px-8 py-8 pb-24">
             <div className="max-w-4xl mx-auto">
               
-              {/* Video or Content Display */}
-              {currentLesson.videoUrl ? (
+              {/* Content Display Based on Type */}
+              {currentLesson.contentType === "video" && currentLesson.videoUrl ? (
                 <div className="bg-black rounded-lg mb-8 aspect-video shadow-lg">
                   <iframe
                     src={currentLesson.videoUrl}
                     className="w-full h-full rounded-lg"
                     allowFullScreen
                     title={currentLesson.title}
+                  />
+                </div>
+              ) : currentLesson.contentType && ["pdf", "pptx", "docx"].includes(currentLesson.contentType) && currentLesson.fileUrl ? (
+                <div className="mb-8 h-[600px] border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                  <DocumentViewer
+                    fileUrl={currentLesson.fileUrl}
+                    contentType={currentLesson.contentType as "pdf" | "pptx" | "docx"}
+                    totalPages={currentLesson.totalPages || 1}
+                    onPageChange={(page) => {
+                      // Track page progress here
+                      console.log(`Viewing page ${page} of lesson ${currentLesson.id}`);
+                    }}
+                    onAllPagesViewed={() => {
+                      toast({
+                        title: "Document Complete",
+                        description: "You've viewed all pages! You can now mark this lesson as complete.",
+                      });
+                    }}
                   />
                 </div>
               ) : (
@@ -449,7 +468,7 @@ export default function Learning() {
                   <CardContent className="pt-0">
                     <div className="prose max-w-none">
                       <p className="text-gray-700 leading-relaxed text-base">
-                        {currentLesson.content || currentLesson.description}
+                        {currentLesson.content || currentLesson.description || "No content available for this lesson."}
                       </p>
                     </div>
                   </CardContent>
