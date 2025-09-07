@@ -1147,19 +1147,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/courses/:id/publish", requireAdminSession, async (req, res) => {
     try {
       const courseId = parseInt(req.params.id);
+      
+      // First check if course exists
+      const existingCourse = await storage.getCourse(courseId);
+      if (!existingCourse) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Update with just the published fields
       const course = await storage.updateCourse(courseId, {
         published: true,
         publishedAt: new Date()
-      });
+      } as any);
       
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
       
-      res.json({ message: "Course published successfully", course });
+      // Ensure we return JSON
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ 
+        success: true,
+        message: "Course published successfully", 
+        published: true,
+        publishedAt: new Date().toISOString()
+      });
     } catch (error) {
       console.error("Error publishing course:", error);
-      res.status(500).json({ message: "Failed to publish course" });
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500).json({ message: "Failed to publish course", error: error.message });
     }
   });
 
