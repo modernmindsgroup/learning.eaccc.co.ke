@@ -391,7 +391,7 @@ export default function CourseBuilderPage() {
               <Button 
                 className="bg-[#0097D7] hover:bg-[#0097D7]/90" 
                 onClick={() => courseId && publishCourseMutation.mutate(courseId)}
-                disabled={publishCourseMutation.isPending || (course as any)?.published}
+                disabled={publishCourseMutation.isPending || course?.published}
                 data-testid="button-publish-course"
               >
                 {publishCourseMutation.isPending ? (
@@ -399,7 +399,7 @@ export default function CourseBuilderPage() {
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Publishing...
                   </>
-                ) : (course as any)?.published ? (
+                ) : course?.published ? (
                   <>
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Published

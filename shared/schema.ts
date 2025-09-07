@@ -68,6 +68,8 @@ export const courses = pgTable("courses", {
   thumbnailUrl: varchar("thumbnail_url"),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0.00"),
   enrollmentCount: integer("enrollment_count").default(0),
+  published: boolean("published").default(false),
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
