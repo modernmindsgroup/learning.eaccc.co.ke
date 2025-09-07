@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRoute } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Plus, GripVertical, ChevronDown, ChevronRight, Edit2, Trash2, Copy, Eye, Lock, Play, CheckCircle, Upload, Link, Video } from "lucide-react";
+import { Loader2, Plus, GripVertical, ChevronDown, ChevronRight, Edit2, Trash2, Copy, Eye, Lock, Play, CheckCircle, Upload, Link, Video, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,15 +31,21 @@ export default function CourseBuilderPage() {
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
   const [expandedTopics, setExpandedTopics] = useState<Set<number>>(new Set());
+  const [contentType, setContentType] = useState<"video" | "pdf" | "pptx" | "docx">("video");
   const [videoInputMethod, setVideoInputMethod] = useState<"youtube" | "url" | "upload">("youtube");
   const [uploadedVideoUrl, setUploadedVideoUrl] = useState<string>("");
+  const [uploadedFileUrl, setUploadedFileUrl] = useState<string>("");
+  const [totalPages, setTotalPages] = useState<number>(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Reset lesson dialog state
   const resetLessonDialog = () => {
+    setContentType("video");
     setVideoInputMethod("youtube");
     setUploadedVideoUrl("");
+    setUploadedFileUrl("");
+    setTotalPages(1);
   };
 
   // Helper function to convert YouTube URL to embed format
@@ -226,21 +232,29 @@ export default function CourseBuilderPage() {
     const youtubeInput = formData.get("youtubeUrl") as string;
     const urlInput = formData.get("videoUrl") as string;
     const duration = parseInt(formData.get("duration") as string) || 0;
+    const pages = parseInt(formData.get("totalPages") as string) || 1;
     
     if (!title.trim()) return;
 
-    // Determine which video URL to use based on input method
+    // Determine content URLs based on content type
     let videoUrl = "";
-    switch (videoInputMethod) {
-      case "youtube":
-        videoUrl = convertYouTubeToEmbed(youtubeInput?.trim() || "");
-        break;
-      case "url":
-        videoUrl = urlInput?.trim() || "";
-        break;
-      case "upload":
-        videoUrl = uploadedVideoUrl;
-        break;
+    let fileUrl = "";
+    
+    if (contentType === "video") {
+      switch (videoInputMethod) {
+        case "youtube":
+          videoUrl = convertYouTubeToEmbed(youtubeInput?.trim() || "");
+          break;
+        case "url":
+          videoUrl = urlInput?.trim() || "";
+          break;
+        case "upload":
+          videoUrl = uploadedVideoUrl;
+          break;
+      }
+    } else {
+      // For documents (pdf, pptx, docx)
+      fileUrl = uploadedFileUrl;
     }
 
     createLessonMutation.mutate({
@@ -248,7 +262,10 @@ export default function CourseBuilderPage() {
       lessonData: {
         title: title.trim(),
         description: description?.trim(),
+        contentType: contentType,
         videoUrl: videoUrl || "",
+        fileUrl: fileUrl || "",
+        totalPages: contentType === "video" ? null : pages,
         duration: duration.toString(),
         isPreview: formData.get("isPreview") === "on",
         isRequired: formData.get("isRequired") === "on",
@@ -1001,57 +1018,105 @@ export default function CourseBuilderPage() {
               </div>
               
               <div>
-                <Label>Video Content</Label>
-                <Tabs value={videoInputMethod} onValueChange={(value) => setVideoInputMethod(value as "youtube" | "url" | "upload")} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="youtube" className="flex items-center gap-2">
-                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                      </svg>
-                      YouTube
+                <Label>Content Type</Label>
+                <Tabs value={contentType} onValueChange={(value) => setContentType(value as "video" | "pdf" | "pptx" | "docx")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-4">
+                    <TabsTrigger value="video" className="flex items-center gap-2">
+                      <Video className="h-4 w-4" />
+                      Video
                     </TabsTrigger>
-                    <TabsTrigger value="url" className="flex items-center gap-2">
-                      <Link className="h-4 w-4" />
-                      Link
+                    <TabsTrigger value="pdf" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      PDF
                     </TabsTrigger>
-                    <TabsTrigger value="upload" className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      Upload
+                    <TabsTrigger value="pptx" className="flex items-center gap-2">
+                      <Play className="h-4 w-4" />
+                      PowerPoint
+                    </TabsTrigger>
+                    <TabsTrigger value="docx" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Word
                     </TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="youtube" className="mt-4">
-                    <Input
-                      id="lesson-youtube"
-                      name="youtubeUrl"
-                      placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                      data-testid="input-new-lesson-youtube"
-                    />
-                    <p className="text-sm text-gray-600 mt-2">
-                      Enter a YouTube video URL (will be automatically converted to embed format)
-                    </p>
+                  <TabsContent value="video" className="mt-4">
+                    <Tabs value={videoInputMethod} onValueChange={(value) => setVideoInputMethod(value as "youtube" | "url" | "upload")} className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="youtube">YouTube</TabsTrigger>
+                        <TabsTrigger value="url">URL</TabsTrigger>
+                        <TabsTrigger value="upload">Upload</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="youtube" className="mt-4">
+                        <Input
+                          id="lesson-youtube"
+                          name="youtubeUrl"
+                          placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+                          data-testid="input-new-lesson-youtube"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="url" className="mt-4">
+                        <Input
+                          id="lesson-video"
+                          name="videoUrl"
+                          placeholder="https://vimeo.com/123456789 or https://example.com/video.mp4"
+                          data-testid="input-new-lesson-video"
+                        />
+                      </TabsContent>
+                      
+                      <TabsContent value="upload" className="mt-4">
+                        <ObjectUploader
+                          maxNumberOfFiles={1}
+                          maxFileSize={104857600} // 100MB
+                          onGetUploadParameters={async () => {
+                            const response = await apiRequest("POST", "/api/objects/upload");
+                            const data = await response.json();
+                            return {
+                              method: "PUT" as const,
+                              url: data.uploadURL,
+                            };
+                          }}
+                          onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                            if (result.successful && result.successful.length > 0) {
+                              const uploadedFile = result.successful[0];
+                              const videoUrl = uploadedFile.uploadURL;
+                              setUploadedVideoUrl(videoUrl || "");
+                              toast({
+                                title: "Video uploaded successfully",
+                                description: "Your video is ready to use in the lesson.",
+                              });
+                            }
+                          }}
+                          buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          Choose Video File
+                        </ObjectUploader>
+                      </TabsContent>
+                    </Tabs>
                   </TabsContent>
                   
-                  <TabsContent value="url" className="mt-4">
-                    <Input
-                      id="lesson-video"
-                      name="videoUrl"
-                      placeholder="https://vimeo.com/123456789 or https://example.com/video.mp4"
-                      data-testid="input-new-lesson-video"
-                    />
-                    <p className="text-sm text-gray-600 mt-2">
-                      Enter a Vimeo, direct video URL, or other video link
-                    </p>
-                  </TabsContent>
-                  
-                  <TabsContent value="upload" className="mt-4">
+                  <TabsContent value="pdf" className="mt-4">
                     <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="total-pages">Total Pages</Label>
+                        <Input
+                          id="total-pages"
+                          name="totalPages"
+                          type="number"
+                          placeholder="1"
+                          min="1"
+                          value={totalPages}
+                          onChange={(e) => setTotalPages(parseInt(e.target.value) || 1)}
+                          data-testid="input-new-lesson-total-pages"
+                        />
+                      </div>
                       <ObjectUploader
                         maxNumberOfFiles={1}
-                        maxFileSize={104857600} // 100MB
-                        allowedFileTypes={['.mp4', '.mov', '.avi', '.wmv', '.flv', '.webm', '.mkv']}
+                        maxFileSize={52428800} // 50MB
                         onGetUploadParameters={async () => {
-                          const response = await apiRequest("POST", "/api/admin/videos/upload-url");
+                          const response = await apiRequest("POST", "/api/objects/upload");
                           const data = await response.json();
                           return {
                             method: "PUT" as const,
@@ -1061,33 +1126,109 @@ export default function CourseBuilderPage() {
                         onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
                           if (result.successful && result.successful.length > 0) {
                             const uploadedFile = result.successful[0];
-                            const videoUrl = uploadedFile.uploadURL;
-                            setUploadedVideoUrl(videoUrl || "");
+                            const fileUrl = uploadedFile.uploadURL;
+                            setUploadedFileUrl(fileUrl || "");
                             toast({
-                              title: "Video uploaded successfully",
-                              description: "Your video is ready to use in the lesson.",
+                              title: "PDF uploaded successfully",
+                              description: "Your PDF document is ready to use in the lesson.",
                             });
                           }
                         }}
                         buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
                       >
-                        <div className="flex items-center justify-center gap-2">
-                          <Video className="h-4 w-4" />
-                          <span>Choose Video File</span>
-                        </div>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Choose PDF File
                       </ObjectUploader>
-                      
-                      {uploadedVideoUrl && (
-                        <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                          <p className="text-sm text-green-800">
-                            ✓ Video uploaded successfully and ready to use
-                          </p>
-                        </div>
-                      )}
-                      
-                      <p className="text-sm text-gray-600">
-                        Supported formats: MP4, MOV, AVI, WMV, FLV, WebM, MKV (max 100MB)
-                      </p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="pptx" className="mt-4">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="total-pages">Total Slides</Label>
+                        <Input
+                          id="total-pages"
+                          name="totalPages"
+                          type="number"
+                          placeholder="1"
+                          min="1"
+                          value={totalPages}
+                          onChange={(e) => setTotalPages(parseInt(e.target.value) || 1)}
+                          data-testid="input-new-lesson-total-slides"
+                        />
+                      </div>
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={52428800} // 50MB
+                        onGetUploadParameters={async () => {
+                          const response = await apiRequest("POST", "/api/objects/upload");
+                          const data = await response.json();
+                          return {
+                            method: "PUT" as const,
+                            url: data.uploadURL,
+                          };
+                        }}
+                        onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                          if (result.successful && result.successful.length > 0) {
+                            const uploadedFile = result.successful[0];
+                            const fileUrl = uploadedFile.uploadURL;
+                            setUploadedFileUrl(fileUrl || "");
+                            toast({
+                              title: "PowerPoint uploaded successfully",
+                              description: "Your presentation is ready to use in the lesson.",
+                            });
+                          }
+                        }}
+                        buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        Choose PowerPoint File
+                      </ObjectUploader>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="docx" className="mt-4">
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="total-pages">Total Pages</Label>
+                        <Input
+                          id="total-pages"
+                          name="totalPages"
+                          type="number"
+                          placeholder="1"
+                          min="1"
+                          value={totalPages}
+                          onChange={(e) => setTotalPages(parseInt(e.target.value) || 1)}
+                          data-testid="input-new-lesson-total-pages-docx"
+                        />
+                      </div>
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={52428800} // 50MB
+                        onGetUploadParameters={async () => {
+                          const response = await apiRequest("POST", "/api/objects/upload");
+                          const data = await response.json();
+                          return {
+                            method: "PUT" as const,
+                            url: data.uploadURL,
+                          };
+                        }}
+                        onComplete={(result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+                          if (result.successful && result.successful.length > 0) {
+                            const uploadedFile = result.successful[0];
+                            const fileUrl = uploadedFile.uploadURL;
+                            setUploadedFileUrl(fileUrl || "");
+                            toast({
+                              title: "Word document uploaded successfully",
+                              description: "Your document is ready to use in the lesson.",
+                            });
+                          }
+                        }}
+                        buttonClassName="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        Choose Word Document
+                      </ObjectUploader>
                     </div>
                   </TabsContent>
                 </Tabs>
