@@ -213,6 +213,8 @@ export class DatabaseStorage implements IStorage {
         thumbnailUrl: courses.thumbnailUrl,
         rating: courses.rating,
         enrollmentCount: courses.enrollmentCount,
+        published: courses.published,
+        publishedAt: courses.publishedAt,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         instructor: {
@@ -293,6 +295,8 @@ export class DatabaseStorage implements IStorage {
         thumbnailUrl: courses.thumbnailUrl,
         rating: courses.rating,
         enrollmentCount: courses.enrollmentCount,
+        published: courses.published,
+        publishedAt: courses.publishedAt,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         instructor: {
@@ -401,6 +405,8 @@ export class DatabaseStorage implements IStorage {
         thumbnailUrl: courses.thumbnailUrl,
         rating: courses.rating,
         enrollmentCount: courses.enrollmentCount,
+        published: courses.published,
+        publishedAt: courses.publishedAt,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         instructor: {
@@ -438,6 +444,8 @@ export class DatabaseStorage implements IStorage {
         thumbnailUrl: courses.thumbnailUrl,
         rating: courses.rating,
         enrollmentCount: courses.enrollmentCount,
+        published: courses.published,
+        publishedAt: courses.publishedAt,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         instructor: {
@@ -476,6 +484,8 @@ export class DatabaseStorage implements IStorage {
         thumbnailUrl: courses.thumbnailUrl,
         rating: courses.rating,
         enrollmentCount: courses.enrollmentCount,
+        published: courses.published,
+        publishedAt: courses.publishedAt,
         createdAt: courses.createdAt,
         updatedAt: courses.updatedAt,
         instructor: {

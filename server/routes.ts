@@ -312,6 +312,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public course topics route (for learning interface)
+  app.get("/api/courses/:courseId/topics", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const topics = await storage.getCourseTopics(courseId);
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching course topics:", error);
+      res.status(500).json({ message: "Failed to fetch course topics" });
+    }
+  });
+
   // Get lesson progress for a course
   app.get("/api/lesson-progress/:courseId", isAuthenticated, async (req: any, res) => {
     try {
@@ -1131,16 +1143,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/courses/:id", requireAdminSession, async (req, res) => {
     try {
       const courseId = parseInt(req.params.id);
-      const deleted = await storage.deleteCourse(courseId);
       
-      if (!deleted) {
+      // Check if course exists first
+      const course = await storage.getCourse(courseId);
+      if (!course) {
         return res.status(404).json({ message: "Course not found" });
       }
       
+      const deleted = await storage.deleteCourse(courseId);
       res.json({ message: "Course deleted successfully" });
     } catch (error) {
       console.error("Error deleting course:", error);
-      res.status(500).json({ message: "Failed to delete course" });
+      // Pass the specific error message from storage layer
+      res.status(400).json({ message: error.message || "Failed to delete course" });
     }
   });
 
