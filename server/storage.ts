@@ -342,6 +342,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCourse(id: number): Promise<boolean> {
+    // First check if there are enrollments for this course
+    const existingEnrollments = await db.select().from(enrollments).where(eq(enrollments.courseId, id));
+    
+    if (existingEnrollments.length > 0) {
+      throw new Error(`Cannot delete course: ${existingEnrollments.length} student(s) are enrolled. Please remove all enrollments first.`);
+    }
+
+    // Also check for other dependencies and clean them up
+    const existingTopics = await db.select().from(topics).where(eq(topics.courseId, id));
+    const existingReviews = await db.select().from(reviews).where(eq(reviews.courseId, id));
+    const existingCertificates = await db.select().from(certificates).where(eq(certificates.courseId, id));
+    
+    // Delete related data first to avoid foreign key constraints
+    if (existingTopics.length > 0) {
+      // Delete lessons first, then topics
+      for (const topic of existingTopics) {
+        // Delete lesson progress and document progress for lessons in this topic
+        const topicLessons = await db.select().from(lessons).where(eq(lessons.topicId, topic.id));
+        for (const lesson of topicLessons) {
+          await db.delete(lessonProgress).where(eq(lessonProgress.lessonId, lesson.id));
+          await db.delete(documentProgress).where(eq(documentProgress.lessonId, lesson.id));
+        }
+        await db.delete(lessons).where(eq(lessons.topicId, topic.id));
+      }
+      await db.delete(topics).where(eq(topics.courseId, id));
+    }
+    
+    if (existingReviews.length > 0) {
+      await db.delete(reviews).where(eq(reviews.courseId, id));
+    }
+    
+    if (existingCertificates.length > 0) {
+      await db.delete(certificates).where(eq(certificates.courseId, id));
+    }
+
+    // Finally delete the course
     const result = await db.delete(courses).where(eq(courses.id, id));
     return (result.rowCount || 0) > 0;
   }
