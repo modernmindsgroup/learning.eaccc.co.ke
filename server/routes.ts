@@ -511,6 +511,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Object storage upload URL endpoint
+  // Serve documents from object storage 
+  app.get("/objects/:objectPath(*)", async (req, res) => {
+    try {
+      const objectPath = req.params.objectPath;
+      const bucketId = "replit-objstore-b5f6086f-b972-44ca-9788-29ac5d35868e";
+      const fullPath = `/.private/${objectPath}`;
+
+      // Create a presigned URL for download
+      const downloadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bucket_name: bucketId,
+          object_name: fullPath,
+          method: "GET",
+          expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour
+        }),
+      });
+
+      if (!downloadURL.ok) {
+        console.error(`Failed to get download URL for ${fullPath}:`, downloadURL.statusText);
+        return res.status(404).json({ message: "Document not found" });
+      }
+
+      const { signed_url } = await downloadURL.json();
+      
+      // Redirect to the signed URL so the browser loads the file directly
+      res.redirect(signed_url);
+    } catch (error) {
+      console.error("Error serving document:", error);
+      res.status(500).json({ message: "Failed to serve document" });
+    }
+  });
+
   app.post("/api/objects/upload", async (req, res) => {
     try {
       // Generate a presigned upload URL using object storage
