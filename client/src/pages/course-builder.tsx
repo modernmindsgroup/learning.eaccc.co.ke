@@ -842,14 +842,129 @@ export default function CourseBuilderPage() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="lesson-video">Video URL</Label>
-                      <Input
-                        id="lesson-video"
-                        defaultValue={selectedLesson.videoUrl || ""}
-                        onBlur={(e) => handleLessonUpdate(selectedLesson, { videoUrl: e.target.value })}
-                        placeholder="https://..."
-                        data-testid="input-lesson-video"
-                      />
+                      <Label>Content Type</Label>
+                      <Tabs 
+                        value={selectedLesson.contentType || "video"} 
+                        onValueChange={(value) => handleLessonUpdate(selectedLesson, { 
+                          contentType: value as "video" | "pdf" | "pptx" | "docx",
+                          // Clear other content fields when switching types
+                          ...(value !== "video" && { videoUrl: null }),
+                          ...(value === "video" && { fileUrl: null, totalPages: null })
+                        })} 
+                        className="w-full"
+                      >
+                        <TabsList className="grid w-full grid-cols-4">
+                          <TabsTrigger value="video" className="flex items-center gap-2">
+                            <Video className="h-4 w-4" />
+                            Video
+                          </TabsTrigger>
+                          <TabsTrigger value="pdf" className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            PDF
+                          </TabsTrigger>
+                          <TabsTrigger value="pptx" className="flex items-center gap-2">
+                            <Play className="h-4 w-4" />
+                            PPT
+                          </TabsTrigger>
+                          <TabsTrigger value="docx" className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            Word
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="video" className="mt-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="lesson-video">Video URL</Label>
+                              <Input
+                                id="lesson-video"
+                                defaultValue={selectedLesson.videoUrl || ""}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { videoUrl: e.target.value })}
+                                placeholder="https://..."
+                                data-testid="input-lesson-video"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="pdf" className="mt-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="lesson-total-pages">Total Pages</Label>
+                              <Input
+                                id="lesson-total-pages"
+                                type="number"
+                                defaultValue={selectedLesson.totalPages || "1"}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { totalPages: parseInt(e.target.value) || 1 })}
+                                min="1"
+                                data-testid="input-lesson-total-pages"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="lesson-file-url">File URL</Label>
+                              <Input
+                                id="lesson-file-url"
+                                defaultValue={selectedLesson.fileUrl || ""}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { fileUrl: e.target.value })}
+                                placeholder="PDF file URL..."
+                                data-testid="input-lesson-file-url"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="pptx" className="mt-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="lesson-total-slides">Total Slides</Label>
+                              <Input
+                                id="lesson-total-slides"
+                                type="number"
+                                defaultValue={selectedLesson.totalPages || "1"}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { totalPages: parseInt(e.target.value) || 1 })}
+                                min="1"
+                                data-testid="input-lesson-total-slides"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="lesson-file-url-ppt">File URL</Label>
+                              <Input
+                                id="lesson-file-url-ppt"
+                                defaultValue={selectedLesson.fileUrl || ""}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { fileUrl: e.target.value })}
+                                placeholder="PowerPoint file URL..."
+                                data-testid="input-lesson-file-url-ppt"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="docx" className="mt-4">
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="lesson-total-pages-doc">Total Pages</Label>
+                              <Input
+                                id="lesson-total-pages-doc"
+                                type="number"
+                                defaultValue={selectedLesson.totalPages || "1"}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { totalPages: parseInt(e.target.value) || 1 })}
+                                min="1"
+                                data-testid="input-lesson-total-pages-doc"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="lesson-file-url-doc">File URL</Label>
+                              <Input
+                                id="lesson-file-url-doc"
+                                defaultValue={selectedLesson.fileUrl || ""}
+                                onBlur={(e) => handleLessonUpdate(selectedLesson, { fileUrl: e.target.value })}
+                                placeholder="Word document file URL..."
+                                data-testid="input-lesson-file-url-doc"
+                              />
+                            </div>
+                          </div>
+                        </TabsContent>
+                      </Tabs>
                     </div>
                     
                     <div>
