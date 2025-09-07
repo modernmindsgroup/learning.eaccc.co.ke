@@ -516,10 +516,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const objectPath = req.params.objectPath;
       const bucketId = "replit-objstore-b5f6086f-b972-44ca-9788-29ac5d35868e";
-      const fullPath = `/.private/${objectPath}`;
+      
+      // Try both locations for backward compatibility
+      // New files: uploads/ | Old files: /.private/uploads/
+      let fullPath = objectPath;
 
-      // Create a presigned URL for download
-      const downloadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
+      console.log(`Serving object: ${fullPath} from bucket: ${bucketId}`);
+
+      // Try the new path first
+      let downloadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -532,8 +537,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }),
       });
 
+      // If not found, try the old /.private/ path for existing files
       if (!downloadURL.ok) {
-        console.error(`Failed to get download URL for ${fullPath}:`, downloadURL.statusText);
+        console.log(`Trying old path: /.private/${fullPath}`);
+        fullPath = `/.private/${objectPath}`;
+        downloadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            bucket_name: bucketId,
+            object_name: fullPath,
+            method: "GET",
+            expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour
+          }),
+        });
+      }
+
+      if (!downloadURL.ok) {
+        console.error(`Failed to get download URL for both paths. Last tried: ${fullPath}`);
         return res.status(404).json({ message: "Document not found" });
       }
 
@@ -552,7 +575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate a presigned upload URL using object storage
       const objectId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
       const bucketId = "replit-objstore-b5f6086f-b972-44ca-9788-29ac5d35868e";
-      const objectPath = `/.private/uploads/${objectId}`;
+      const objectPath = `uploads/${objectId}`;
       
       // Create a presigned URL for upload
       const uploadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
