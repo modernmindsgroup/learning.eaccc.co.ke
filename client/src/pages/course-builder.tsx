@@ -1115,6 +1115,7 @@ export default function CourseBuilderPage() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         maxFileSize={52428800} // 50MB
+                        allowedFileTypes={['.pdf']}
                         onGetUploadParameters={async () => {
                           const response = await apiRequest("POST", "/api/objects/upload");
                           const data = await response.json();
@@ -1160,6 +1161,7 @@ export default function CourseBuilderPage() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         maxFileSize={52428800} // 50MB
+                        allowedFileTypes={['.pptx', '.ppt']}
                         onGetUploadParameters={async () => {
                           const response = await apiRequest("POST", "/api/objects/upload");
                           const data = await response.json();
@@ -1205,6 +1207,7 @@ export default function CourseBuilderPage() {
                       <ObjectUploader
                         maxNumberOfFiles={1}
                         maxFileSize={52428800} // 50MB
+                        allowedFileTypes={['.docx', '.doc']}
                         onGetUploadParameters={async () => {
                           const response = await apiRequest("POST", "/api/objects/upload");
                           const data = await response.json();
