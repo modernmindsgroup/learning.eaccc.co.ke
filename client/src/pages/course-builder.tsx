@@ -1164,17 +1164,33 @@ export default function CourseBuilderPage() {
                       </div>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => {
-                        setSelectedLesson(null);
-                        setSelectedContentType("video");
-                      }}
-                      data-testid="button-close-lesson-details"
-                    >
-                      Close Details
-                    </Button>
+                    <div className="space-y-3">
+                      <Button
+                        variant="default"
+                        className="w-full bg-[#0097D7] hover:bg-[#0097D7]/90"
+                        onClick={() => {
+                          toast({
+                            title: "Content Updated",
+                            description: "All lesson changes have been saved successfully.",
+                          });
+                        }}
+                        data-testid="button-update-content"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Update Content
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => {
+                          setSelectedLesson(null);
+                          setSelectedContentType("video");
+                        }}
+                        data-testid="button-close-lesson-details"
+                      >
+                        Close
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-6">

@@ -61,33 +61,6 @@ export default function Learning() {
     enabled: !!courseId && isAuthenticated,
   });
 
-  // Document progress for current lesson
-  const { data: documentProgress } = useQuery<number[]>({
-    queryKey: ["/api/lessons", lessonId, "document-progress"],
-    enabled: !!lessonId && isAuthenticated && currentLesson?.contentType && ["pdf", "pptx", "docx"].includes(currentLesson.contentType),
-  });
-
-  // Mutation for tracking document progress
-  const trackDocumentProgressMutation = useMutation({
-    mutationFn: async ({ lessonId, page }: { lessonId: number; page: number }) => {
-      await apiRequest("POST", `/api/lessons/${lessonId}/document-progress`, { page });
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      console.error("Error tracking document progress:", error);
-    },
-  });
-
   // Get topics for organizing lessons
   const { data: topics } = useQuery<any[]>({
     queryKey: ["/api/courses", courseId, "topics"],
@@ -127,6 +100,33 @@ export default function Learning() {
   // Get current lesson
   const allLessons = sections.flatMap(s => s.lessons);
   const currentLesson = allLessons.find(l => l.id === lessonId) || allLessons[0];
+
+  // Document progress for current lesson (moved after currentLesson is defined)
+  const { data: documentProgress } = useQuery<number[]>({
+    queryKey: ["/api/lessons", lessonId, "document-progress"],
+    enabled: !!(lessonId && isAuthenticated && currentLesson?.contentType && ["pdf", "pptx", "docx"].includes(currentLesson.contentType)),
+  });
+
+  // Mutation for tracking document progress
+  const trackDocumentProgressMutation = useMutation({
+    mutationFn: async ({ lessonId, page }: { lessonId: number; page: number }) => {
+      await apiRequest("POST", `/api/lessons/${lessonId}/document-progress`, { page });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      console.error("Error tracking document progress:", error);
+    },
+  });
   const currentLessonIndex = allLessons.findIndex(l => l.id === currentLesson?.id) ?? -1;
   const hasNext = currentLessonIndex < allLessons.length - 1;
   const hasPrev = currentLessonIndex > 0;
