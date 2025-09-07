@@ -27,6 +27,7 @@ export default function CourseBuilderPage() {
   const courseId = match && params ? parseInt(params.courseId) : null;
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [selectedContentType, setSelectedContentType] = useState<"video" | "pdf" | "pptx" | "docx">("video");
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
@@ -758,7 +759,10 @@ export default function CourseBuilderPage() {
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          onClick={() => setSelectedLesson(lesson)}
+                                          onClick={() => {
+                                            setSelectedLesson(lesson);
+                                            setSelectedContentType(lesson.contentType || "video");
+                                          }}
                                           data-testid={`button-edit-lesson-${lesson.id}`}
                                         >
                                           <Edit2 className="h-4 w-4" />
@@ -844,13 +848,20 @@ export default function CourseBuilderPage() {
                     <div>
                       <Label>Content Type</Label>
                       <Tabs 
-                        value={selectedLesson.contentType || "video"} 
-                        onValueChange={(value) => handleLessonUpdate(selectedLesson, { 
-                          contentType: value as "video" | "pdf" | "pptx" | "docx",
-                          // Clear other content fields when switching types
-                          ...(value !== "video" && { videoUrl: null }),
-                          ...(value === "video" && { fileUrl: null, totalPages: null })
-                        })} 
+                        value={selectedContentType} 
+                        onValueChange={(value) => {
+                          const newContentType = value as "video" | "pdf" | "pptx" | "docx";
+                          setSelectedContentType(newContentType);
+                          // Only save to database when content type actually changes
+                          if (newContentType !== selectedLesson.contentType) {
+                            handleLessonUpdate(selectedLesson, { 
+                              contentType: newContentType,
+                              // Clear other content fields when switching types
+                              ...(newContentType !== "video" && { videoUrl: null }),
+                              ...(newContentType === "video" && { fileUrl: null, totalPages: null })
+                            });
+                          }
+                        }} 
                         className="w-full"
                       >
                         <TabsList className="grid w-full grid-cols-4">
@@ -1116,7 +1127,10 @@ export default function CourseBuilderPage() {
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => setSelectedLesson(null)}
+                      onClick={() => {
+                        setSelectedLesson(null);
+                        setSelectedContentType("video");
+                      }}
                       data-testid="button-close-lesson-details"
                     >
                       Close Details
