@@ -6,6 +6,7 @@ import {
   lessons,
   enrollments,
   lessonProgress,
+  documentProgress,
   certificates,
   reviews,
   blogPosts,
@@ -25,6 +26,7 @@ import {
   type Enrollment,
   type InsertEnrollment,
   type LessonProgress,
+  type DocumentProgress,
   type Certificate,
   type Review,
   type InsertReview,
@@ -140,6 +142,10 @@ export interface IStorage {
   getInstructorCourses(userId: string): Promise<Course[]>;
   getInstructorAnalytics(userId: string): Promise<any[]>;
   getInstructorStudents(userId: string): Promise<any[]>;
+
+  // Document progress operations
+  trackDocumentProgress(userId: string, lessonId: number, page: number): Promise<void>;
+  getDocumentProgress(userId: string, lessonId: number): Promise<number[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1073,6 +1079,42 @@ export class DatabaseStorage implements IStorage {
       enrolledAt: row.enrolledAt?.toISOString() || "",
       lastActive: row.lastActive?.toISOString() || "",
     }));
+  }
+
+  // Document progress operations
+  async trackDocumentProgress(userId: string, lessonId: number, page: number): Promise<void> {
+    // Insert or update document progress for the specific page
+    await db
+      .insert(documentProgress)
+      .values({
+        userId,
+        lessonId,
+        page,
+        viewedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [documentProgress.userId, documentProgress.lessonId, documentProgress.page],
+        set: {
+          viewedAt: new Date(),
+        },
+      });
+  }
+
+  async getDocumentProgress(userId: string, lessonId: number): Promise<number[]> {
+    const progress = await db
+      .select({
+        page: documentProgress.page,
+      })
+      .from(documentProgress)
+      .where(
+        and(
+          eq(documentProgress.userId, userId),
+          eq(documentProgress.lessonId, lessonId)
+        )
+      )
+      .orderBy(asc(documentProgress.page));
+
+    return progress.map(p => p.page);
   }
 }
 

@@ -7,6 +7,7 @@ interface DocumentViewerProps {
   fileUrl: string;
   contentType: "pdf" | "pptx" | "docx";
   totalPages: number;
+  viewedPages?: number[];
   onPageChange?: (currentPage: number) => void;
   onAllPagesViewed?: () => void;
   initialPage?: number;
@@ -16,13 +17,23 @@ export function DocumentViewer({
   fileUrl,
   contentType,
   totalPages,
+  viewedPages: initialViewedPages = [],
   onPageChange,
   onAllPagesViewed,
   initialPage = 1,
 }: DocumentViewerProps) {
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [viewedPages, setViewedPages] = useState<Set<number>>(new Set([initialPage]));
+  const [viewedPages, setViewedPages] = useState<Set<number>>(
+    new Set(initialViewedPages.length > 0 ? initialViewedPages : [initialPage])
+  );
   const [isLoading, setIsLoading] = useState(true);
+
+  // Update viewed pages when initial data changes
+  useEffect(() => {
+    if (initialViewedPages.length > 0) {
+      setViewedPages(new Set(initialViewedPages));
+    }
+  }, [initialViewedPages]);
 
   const progress = (viewedPages.size / totalPages) * 100;
 

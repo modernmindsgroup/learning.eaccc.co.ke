@@ -61,6 +61,33 @@ export default function Learning() {
     enabled: !!courseId && isAuthenticated,
   });
 
+  // Document progress for current lesson
+  const { data: documentProgress } = useQuery<number[]>({
+    queryKey: ["/api/lessons", lessonId, "document-progress"],
+    enabled: !!lessonId && isAuthenticated && currentLesson?.contentType && ["pdf", "pptx", "docx"].includes(currentLesson.contentType),
+  });
+
+  // Mutation for tracking document progress
+  const trackDocumentProgressMutation = useMutation({
+    mutationFn: async ({ lessonId, page }: { lessonId: number; page: number }) => {
+      await apiRequest("POST", `/api/lessons/${lessonId}/document-progress`, { page });
+    },
+    onError: (error) => {
+      if (isUnauthorizedError(error)) {
+        toast({
+          title: "Unauthorized",
+          description: "You are logged out. Logging in again...",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 500);
+        return;
+      }
+      console.error("Error tracking document progress:", error);
+    },
+  });
+
   // Process lessons into sections
   const sections: CourseSection[] = lessons ? lessons.reduce((acc: CourseSection[], lesson: Lesson) => {
     const sectionTitle = lesson.sectionTitle || "Introduction";
@@ -448,9 +475,13 @@ export default function Learning() {
                     fileUrl={currentLesson.fileUrl}
                     contentType={currentLesson.contentType as "pdf" | "pptx" | "docx"}
                     totalPages={currentLesson.totalPages || 1}
+                    viewedPages={documentProgress || []}
                     onPageChange={(page) => {
-                      // Track page progress here
-                      console.log(`Viewing page ${page} of lesson ${currentLesson.id}`);
+                      // Track page progress
+                      trackDocumentProgressMutation.mutate({ 
+                        lessonId: currentLesson.id, 
+                        page 
+                      });
                     }}
                     onAllPagesViewed={() => {
                       toast({

@@ -130,6 +130,17 @@ export const lessonProgress = pgTable("lesson_progress", {
   unique: { columns: [table.userId, table.lessonId] },
 }));
 
+// Document Progress table for tracking individual page views
+export const documentProgress = pgTable("document_progress", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id),
+  lessonId: integer("lesson_id").references(() => lessons.id),
+  page: integer("page").notNull(),
+  viewedAt: timestamp("viewed_at").defaultNow(),
+}, (table) => ({
+  unique: { columns: [table.userId, table.lessonId, table.page] },
+}));
+
 // Certificates table
 export const certificates = pgTable("certificates", {
   id: serial("id").primaryKey(),
@@ -307,6 +318,7 @@ export type Topic = typeof topics.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type LessonProgress = typeof lessonProgress.$inferSelect;
+export type DocumentProgress = typeof documentProgress.$inferSelect;
 export type Certificate = typeof certificates.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type BlogPost = typeof blogPosts.$inferSelect;

@@ -383,6 +383,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Track document progress
+  app.post("/api/lessons/:lessonId/document-progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const userId = req.user.claims.sub;
+      const { page } = req.body;
+
+      if (!page || page < 1) {
+        return res.status(400).json({ message: "Valid page number is required" });
+      }
+
+      await storage.trackDocumentProgress(userId, lessonId, page);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error tracking document progress:", error);
+      res.status(500).json({ message: "Failed to track document progress" });
+    }
+  });
+
+  // Get document progress for a lesson
+  app.get("/api/lessons/:lessonId/document-progress", isAuthenticated, async (req: any, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const userId = req.user.claims.sub;
+
+      const progress = await storage.getDocumentProgress(userId, lessonId);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching document progress:", error);
+      res.status(500).json({ message: "Failed to fetch document progress" });
+    }
+  });
+
   // Get user certificates
   app.get("/api/my-certificates", isAuthenticated, async (req: any, res) => {
     try {
