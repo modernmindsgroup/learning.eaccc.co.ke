@@ -1144,6 +1144,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/courses/:id/publish", requireAdminSession, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.updateCourse(courseId, {
+        published: true,
+        publishedAt: new Date()
+      });
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      res.json({ message: "Course published successfully", course });
+    } catch (error) {
+      console.error("Error publishing course:", error);
+      res.status(500).json({ message: "Failed to publish course" });
+    }
+  });
+
   // Topic Management Routes (Admin only)
   app.get("/api/admin/courses/:courseId/topics", requireAdminSession, async (req, res) => {
     try {

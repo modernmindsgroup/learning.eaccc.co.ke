@@ -209,6 +209,29 @@ export default function CourseBuilderPage() {
     },
   });
 
+  // Publish course mutation
+  const publishCourseMutation = useMutation({
+    mutationFn: async (courseId: number) => {
+      const response = await apiRequest("POST", `/api/admin/courses/${courseId}/publish`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/course", courseId] });
+      toast({
+        title: "Course published successfully! \ud83c\udf89",
+        description: "Your course is now live and available to students.",
+        duration: 5000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to publish course",
+        description: error.message || "Please try again or contact support.",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Topic form handlers
   const handleCreateTopic = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -365,8 +388,25 @@ export default function CourseBuilderPage() {
                 <Eye className="h-4 w-4 mr-2" />
                 {previewMode ? "Edit Mode" : "Preview Mode"}
               </Button>
-              <Button className="bg-[#0097D7] hover:bg-[#0097D7]/90" data-testid="button-publish-course">
-                Publish Course
+              <Button 
+                className="bg-[#0097D7] hover:bg-[#0097D7]/90" 
+                onClick={() => courseId && publishCourseMutation.mutate(courseId)}
+                disabled={publishCourseMutation.isPending || (course as any)?.published}
+                data-testid="button-publish-course"
+              >
+                {publishCourseMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Publishing...
+                  </>
+                ) : (course as any)?.published ? (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Published
+                  </>
+                ) : (
+                  "Publish Course"
+                )}
               </Button>
             </div>
           </div>
@@ -761,7 +801,7 @@ export default function CourseBuilderPage() {
                                           size="sm"
                                           onClick={() => {
                                             setSelectedLesson(lesson);
-                                            setSelectedContentType(lesson.contentType || "video");
+                                            setSelectedContentType((lesson.contentType as "video" | "pdf" | "pptx" | "docx") || "video");
                                           }}
                                           data-testid={`button-edit-lesson-${lesson.id}`}
                                         >
