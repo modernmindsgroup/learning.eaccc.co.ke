@@ -10,6 +10,7 @@ import {
   jsonb,
   index,
   serial,
+  unique,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -140,7 +141,7 @@ export const documentProgress = pgTable("document_progress", {
   page: integer("page").notNull(),
   viewedAt: timestamp("viewed_at").defaultNow(),
 }, (table) => ({
-  unique: { columns: [table.userId, table.lessonId, table.page] },
+  uniqueUserLessonPage: unique().on(table.userId, table.lessonId, table.page),
 }));
 
 // Certificates table

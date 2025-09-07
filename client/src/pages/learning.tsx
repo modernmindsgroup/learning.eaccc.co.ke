@@ -88,45 +88,41 @@ export default function Learning() {
     },
   });
 
-  // Process lessons into sections
-  const sections: CourseSection[] = lessons ? lessons.reduce((acc: CourseSection[], lesson: Lesson) => {
-    const sectionTitle = lesson.sectionTitle || "Introduction";
-    const sectionOrder = lesson.sectionOrder || 1;
-    
-    let section = acc.find(s => s.title === sectionTitle);
-    if (!section) {
-      section = {
-        title: sectionTitle,
-        order: sectionOrder,
-        lessons: [],
-        completedCount: 0,
-        totalDuration: "0min"
-      };
-      acc.push(section);
-    }
+  // Get topics for organizing lessons
+  const { data: topics } = useQuery<any[]>({
+    queryKey: ["/api/courses", courseId, "topics"],
+  });
 
-    const lessonWithProgress: LessonWithProgress = {
+  // Process lessons into sections based on topics
+  const sections: CourseSection[] = lessons && topics ? topics.map((topic) => {
+    const topicLessons = lessons.filter(lesson => lesson.topicId === topic.id);
+    
+    const lessonsWithProgress: LessonWithProgress[] = topicLessons.map(lesson => ({
       ...lesson,
       completed: lessonProgress?.some(p => p.lessonId === lesson.id && p.completed) || false
-    };
+    }));
 
-    section.lessons.push(lessonWithProgress);
-    if (lessonWithProgress.completed) {
-      section.completedCount++;
-    }
+    const completedCount = lessonsWithProgress.filter(l => l.completed).length;
 
-    // Calculate total duration for section
-    const totalMinutes = section.lessons.reduce((sum, l) => {
+    // Calculate total duration for topic
+    const totalMinutes = lessonsWithProgress.reduce((sum, l) => {
       const duration = l.duration || "0min";
       const minutes = parseInt(duration.replace(/\D/g, '')) || 0;
       return sum + minutes;
     }, 0);
-    section.totalDuration = totalMinutes >= 60 ? 
+    
+    const totalDuration = totalMinutes >= 60 ? 
       `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}min` : 
       `${totalMinutes}min`;
 
-    return acc;
-  }, []).sort((a, b) => a.order - b.order) : [];
+    return {
+      title: topic.title,
+      order: topic.orderIndex,
+      lessons: lessonsWithProgress.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)),
+      completedCount,
+      totalDuration
+    };
+  }).filter(section => section.lessons.length > 0).sort((a, b) => a.order - b.order) : [];
 
   // Get current lesson
   const allLessons = sections.flatMap(s => s.lessons);

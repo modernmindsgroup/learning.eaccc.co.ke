@@ -70,11 +70,27 @@ export function DocumentViewer({
     }
   }, [viewedPages.size, totalPages, onAllPagesViewed]);
 
+  // Convert object storage URL to proxy URL
+  const getProxyUrl = (url: string) => {
+    if (url.includes('storage.googleapis.com')) {
+      // Extract the file path from the Google Cloud Storage URL
+      const urlParts = url.split('/');
+      const bucketIndex = urlParts.findIndex(part => part.includes('replit-objstore'));
+      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 1) {
+        const filePath = urlParts.slice(bucketIndex + 1).join('/');
+        return `/objects/${filePath}`;
+      }
+    }
+    return url;
+  };
+
   const renderDocumentViewer = () => {
+    const proxyUrl = getProxyUrl(fileUrl);
+    
     if (contentType === "pdf") {
       return (
         <iframe
-          src={`${fileUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`}
+          src={`${proxyUrl}#page=${currentPage}&toolbar=0&navpanes=0&scrollbar=0`}
           className="w-full h-full border-0"
           onLoad={() => setIsLoading(false)}
           title="PDF Document"
@@ -100,7 +116,7 @@ export function DocumentViewer({
           </div>
           <Button
             variant="outline"
-            onClick={() => window.open(fileUrl, '_blank')}
+            onClick={() => window.open(getProxyUrl(fileUrl), '_blank')}
             className="flex items-center gap-2"
           >
             <Download className="h-4 w-4" />
