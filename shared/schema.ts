@@ -90,7 +90,10 @@ export const lessons = pgTable("lessons", {
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   content: text("content"), // For text-based lessons
+  contentType: varchar("content_type", { length: 50 }).default("video"), // "video", "pdf", "pptx", "docx"
   videoUrl: varchar("video_url"), // For video lessons
+  fileUrl: varchar("file_url"), // For document lessons (PDF, PPTX, DOCX)
+  totalPages: integer("total_pages"), // For document lessons
   duration: varchar("duration"), // e.g., "15 minutes"
   orderIndex: integer("order_index").notNull(),
   sectionTitle: varchar("section_title", { length: 255 }).default("Introduction"),
@@ -121,6 +124,8 @@ export const lessonProgress = pgTable("lesson_progress", {
   lessonId: integer("lesson_id").references(() => lessons.id),
   completed: boolean("completed").default(false),
   completedAt: timestamp("completed_at"),
+  currentPage: integer("current_page").default(1), // For document lessons
+  pagesViewed: text("pages_viewed"), // JSON array of viewed page numbers
 }, (table) => ({
   unique: { columns: [table.userId, table.lessonId] },
 }));
