@@ -498,6 +498,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Object storage upload URL endpoint
+  app.post("/api/objects/upload", async (req, res) => {
+    try {
+      // Generate a presigned upload URL using object storage
+      const objectId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      const bucketId = "replit-objstore-b5f6086f-b972-44ca-9788-29ac5d35868e";
+      const objectPath = `/.private/uploads/${objectId}`;
+      
+      // Create a presigned URL for upload
+      const uploadURL = await fetch("http://127.0.0.1:1106/object-storage/signed-object-url", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bucket_name: bucketId,
+          object_name: `uploads/${objectId}`,
+          method: "PUT",
+          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
+        }),
+      });
+
+      if (!uploadURL.ok) {
+        throw new Error(`Failed to generate upload URL: ${uploadURL.status}`);
+      }
+
+      const { signed_url } = await uploadURL.json();
+      res.json({ uploadURL: signed_url });
+    } catch (error) {
+      console.error("Error generating upload URL:", error);
+      res.status(500).json({ message: "Failed to generate upload URL" });
+    }
+  });
+
   // Payment routes
   app.post("/api/payments/initialize", isAuthenticated, async (req: any, res) => {
     console.log("=== PAYMENT INITIALIZATION START ===");
