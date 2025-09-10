@@ -15,7 +15,7 @@ import { BookOpen, Award, Clock, ArrowRight, MessageSquare, Trophy, FileCheck, C
 import type { CourseWithInstructor, Enrollment } from "@shared/schema";
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   const { data: newestCourses } = useQuery<CourseWithInstructor[]>({
     queryKey: ["/api/courses/newest"],
@@ -23,10 +23,12 @@ export default function Home() {
 
   const { data: enrollments } = useQuery<(Enrollment & { course: CourseWithInstructor })[]>({
     queryKey: ["/api/my-enrollments"],
+    enabled: isAuthenticated,
   });
 
   const { data: certificates } = useQuery<any[]>({
     queryKey: ["/api/my-certificates"],
+    enabled: isAuthenticated,
   });
 
   return (

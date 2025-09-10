@@ -28,10 +28,12 @@ export default function Dashboard() {
 
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<(Enrollment & { course: CourseWithInstructor })[]>({
     queryKey: ["/api/my-enrollments"],
+    enabled: isAuthenticated,
   });
 
   const { data: certificates, isLoading: certificatesLoading } = useQuery<Certificate[]>({
     queryKey: ["/api/my-certificates"],
+    enabled: isAuthenticated,
   });
 
   // Redirect to login if not authenticated
