@@ -66,13 +66,9 @@ function Router() {
       {/* Home route - accessible to everyone */}
       <Route path="/" component={Home} />
       
-      {/* Protected routes - require authentication */}
-      {isAuthenticated && (
-        <>
-          <Route path="/learn/:courseId/:lessonId?" component={Learning} />
-          <Route path="/dashboard" component={Dashboard} />
-        </>
-      )}
+      {/* Protected routes - authentication handled at component level */}
+      <Route path="/learn/:courseId/:lessonId?" component={Learning} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
     </Switch>
   );
