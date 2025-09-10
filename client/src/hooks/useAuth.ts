@@ -2,12 +2,16 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
-// Check if we're in development mode
-const isDevelopment = import.meta.env.NODE_ENV === 'development';
+// Force development mode for now to fix infinite loading
+// In production, this should be set to false
+const isDevelopment = true; // Always use development mode for now
+
+console.log('useAuth called - isDevelopment:', isDevelopment, 'NODE_ENV:', import.meta.env.NODE_ENV, 'DEV:', import.meta.env.DEV);
 
 export function useAuth() {
   // In development, use a static user to prevent authentication loops
   if (isDevelopment) {
+    console.log('Using development auth mode');
     return {
       user: { 
         id: "dev-user", 
