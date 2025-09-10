@@ -195,7 +195,47 @@ export class DatabaseStorage implements IStorage {
     search?: string;
     sortBy?: "newest" | "priceLowHigh" | "priceHighLow" | "rating";
   }): Promise<CourseWithInstructor[]> {
-    let query = db
+    const conditions = [];
+
+    if (filters?.category) {
+      conditions.push(eq(courses.category, filters.category));
+    }
+    if (filters?.isFree !== undefined) {
+      conditions.push(eq(courses.isFree, filters.isFree));
+    }
+    if (filters?.hasQuiz !== undefined) {
+      conditions.push(eq(courses.hasQuiz, filters.hasQuiz));
+    }
+    if (filters?.hasCertificate !== undefined) {
+      conditions.push(eq(courses.hasCertificate, filters.hasCertificate));
+    }
+    if (filters?.isFeatured !== undefined) {
+      conditions.push(eq(courses.isFeatured, filters.isFeatured));
+    }
+    if (filters?.search) {
+      conditions.push(ilike(courses.title, `%${filters.search}%`));
+    }
+
+    // Build the order clause
+    let orderClause;
+    switch (filters?.sortBy) {
+      case "newest":
+        orderClause = desc(courses.createdAt);
+        break;
+      case "priceLowHigh":
+        orderClause = asc(courses.price);
+        break;
+      case "priceHighLow":
+        orderClause = desc(courses.price);
+        break;
+      case "rating":
+        orderClause = desc(courses.rating);
+        break;
+      default:
+        orderClause = desc(courses.createdAt);
+    }
+
+    const results = await db
       .select({
         id: courses.id,
         title: courses.title,
@@ -219,6 +259,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: courses.updatedAt,
         instructor: {
           id: instructors.id,
+          userId: instructors.userId,
           name: instructors.name,
           bio: instructors.bio,
           email: instructors.email,
@@ -228,52 +269,23 @@ export class DatabaseStorage implements IStorage {
         },
       })
       .from(courses)
-      .leftJoin(instructors, eq(courses.instructorId, instructors.id));
+      .leftJoin(instructors, eq(courses.instructorId, instructors.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderClause);
 
-    const conditions = [];
-
-    if (filters?.category) {
-      conditions.push(eq(courses.category, filters.category));
-    }
-    if (filters?.isFree !== undefined) {
-      conditions.push(eq(courses.isFree, filters.isFree));
-    }
-    if (filters?.hasQuiz !== undefined) {
-      conditions.push(eq(courses.hasQuiz, filters.hasQuiz));
-    }
-    if (filters?.hasCertificate !== undefined) {
-      conditions.push(eq(courses.hasCertificate, filters.hasCertificate));
-    }
-    if (filters?.isFeatured !== undefined) {
-      conditions.push(eq(courses.isFeatured, filters.isFeatured));
-    }
-    if (filters?.search) {
-      conditions.push(ilike(courses.title, `%${filters.search}%`));
-    }
-
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
-
-    // Apply sorting
-    switch (filters?.sortBy) {
-      case "newest":
-        query = query.orderBy(desc(courses.createdAt));
-        break;
-      case "priceLowHigh":
-        query = query.orderBy(asc(courses.price));
-        break;
-      case "priceHighLow":
-        query = query.orderBy(desc(courses.price));
-        break;
-      case "rating":
-        query = query.orderBy(desc(courses.rating));
-        break;
-      default:
-        query = query.orderBy(desc(courses.createdAt));
-    }
-
-    return await query;
+    return results.map(row => ({
+      ...row,
+      instructor: row.instructor || {
+        id: 0,
+        userId: null,
+        name: 'Unknown Instructor',
+        bio: null,
+        email: null,
+        profileImage: null,
+        expertise: null,
+        createdAt: null,
+      },
+    }));
   }
 
   async getCourse(id: number): Promise<CourseWithInstructor | undefined> {
@@ -301,6 +313,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: courses.updatedAt,
         instructor: {
           id: instructors.id,
+          userId: instructors.userId,
           name: instructors.name,
           bio: instructors.bio,
           email: instructors.email,
@@ -313,7 +326,21 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(instructors, eq(courses.instructorId, instructors.id))
       .where(eq(courses.id, id));
     
-    return course;
+    if (!course) return undefined;
+    
+    return {
+      ...course,
+      instructor: course.instructor || {
+        id: 0,
+        userId: null,
+        name: 'Unknown Instructor',
+        bio: null,
+        email: null,
+        profileImage: null,
+        expertise: null,
+        createdAt: null,
+      },
+    };
   }
 
   async getCourseWithProgress(id: number, userId?: string): Promise<CourseWithProgress | undefined> {
@@ -387,7 +414,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getNewestCourses(limit = 6): Promise<CourseWithInstructor[]> {
-    return await db
+    const results = await db
       .select({
         id: courses.id,
         title: courses.title,
@@ -411,6 +438,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: courses.updatedAt,
         instructor: {
           id: instructors.id,
+          userId: instructors.userId,
           name: instructors.name,
           bio: instructors.bio,
           email: instructors.email,
@@ -423,10 +451,24 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(instructors, eq(courses.instructorId, instructors.id))
       .orderBy(desc(courses.createdAt))
       .limit(limit);
+
+    return results.map(row => ({
+      ...row,
+      instructor: row.instructor || {
+        id: 0,
+        userId: null,
+        name: 'Unknown Instructor',
+        bio: null,
+        email: null,
+        profileImage: null,
+        expertise: null,
+        createdAt: null,
+      },
+    }));
   }
 
   async getFreeCourses(limit = 4): Promise<CourseWithInstructor[]> {
-    return await db
+    const results = await db
       .select({
         id: courses.id,
         title: courses.title,
@@ -450,6 +492,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: courses.updatedAt,
         instructor: {
           id: instructors.id,
+          userId: instructors.userId,
           name: instructors.name,
           bio: instructors.bio,
           email: instructors.email,
@@ -463,10 +506,24 @@ export class DatabaseStorage implements IStorage {
       .where(eq(courses.isFree, true))
       .orderBy(desc(courses.rating))
       .limit(limit);
+
+    return results.map(row => ({
+      ...row,
+      instructor: row.instructor || {
+        id: 0,
+        userId: null,
+        name: 'Unknown Instructor',
+        bio: null,
+        email: null,
+        profileImage: null,
+        expertise: null,
+        createdAt: null,
+      },
+    }));
   }
 
   async getFeaturedCourses(): Promise<CourseWithInstructor[]> {
-    return await db
+    const results = await db
       .select({
         id: courses.id,
         title: courses.title,
@@ -490,6 +547,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: courses.updatedAt,
         instructor: {
           id: instructors.id,
+          userId: instructors.userId,
           name: instructors.name,
           bio: instructors.bio,
           email: instructors.email,
@@ -502,6 +560,20 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(instructors, eq(courses.instructorId, instructors.id))
       .where(eq(courses.isFeatured, true))
       .orderBy(desc(courses.rating));
+
+    return results.map(row => ({
+      ...row,
+      instructor: row.instructor || {
+        id: 0,
+        userId: null,
+        name: 'Unknown Instructor',
+        bio: null,
+        email: null,
+        profileImage: null,
+        expertise: null,
+        createdAt: null,
+      },
+    }));
   }
 
   // Topic operations
@@ -549,7 +621,7 @@ export class DatabaseStorage implements IStorage {
     const [maxOrder] = await db
       .select({ max: sql<number>`max(${topics.orderIndex})` })
       .from(topics)
-      .where(eq(topics.courseId, topic.courseId));
+      .where(eq(topics.courseId, topic.courseId!));
     
     const newOrderIndex = (maxOrder.max || 0) + 1;
 
@@ -655,7 +727,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserEnrollments(userId: string): Promise<(Enrollment & { course: CourseWithInstructor })[]> {
-    return await db
+    const results = await db
       .select({
         id: enrollments.id,
         userId: enrollments.userId,
@@ -681,17 +753,20 @@ export class DatabaseStorage implements IStorage {
           thumbnailUrl: courses.thumbnailUrl,
           rating: courses.rating,
           enrollmentCount: courses.enrollmentCount,
+          published: courses.published,
+          publishedAt: courses.publishedAt,
           createdAt: courses.createdAt,
           updatedAt: courses.updatedAt,
-          instructor: {
-            id: instructors.id,
-            name: instructors.name,
-            bio: instructors.bio,
-            email: instructors.email,
-            profileImage: instructors.profileImage,
-            expertise: instructors.expertise,
-            createdAt: instructors.createdAt,
-          },
+        },
+        instructor: {
+          id: instructors.id,
+          userId: instructors.userId,
+          name: instructors.name,
+          bio: instructors.bio,
+          email: instructors.email,
+          profileImage: instructors.profileImage,
+          expertise: instructors.expertise,
+          createdAt: instructors.createdAt,
         },
       })
       .from(enrollments)
@@ -699,6 +774,79 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(instructors, eq(courses.instructorId, instructors.id))
       .where(eq(enrollments.userId, userId))
       .orderBy(desc(enrollments.enrolledAt));
+
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      courseId: row.courseId,
+      enrolledAt: row.enrolledAt,
+      completedAt: row.completedAt,
+      progress: row.progress,
+      certificateIssued: row.certificateIssued,
+      course: row.course ? {
+        id: row.course.id,
+        title: row.course.title,
+        description: row.course.description,
+        category: row.course.category,
+        instructorId: row.course.instructorId,
+        duration: row.course.duration,
+        price: row.course.price,
+        isFree: row.course.isFree,
+        hasQuiz: row.course.hasQuiz,
+        hasCertificate: row.course.hasCertificate,
+        isFeatured: row.course.isFeatured,
+        isBestseller: row.course.isBestseller,
+        level: row.course.level,
+        thumbnailUrl: row.course.thumbnailUrl,
+        rating: row.course.rating,
+        enrollmentCount: row.course.enrollmentCount,
+        published: row.course.published,
+        publishedAt: row.course.publishedAt,
+        createdAt: row.course.createdAt,
+        updatedAt: row.course.updatedAt,
+        instructor: row.instructor || {
+          id: 0,
+          userId: null,
+          name: 'Unknown Instructor',
+          bio: null,
+          email: null,
+          profileImage: null,
+          expertise: null,
+          createdAt: null,
+        },
+      } : {
+        id: 0,
+        title: 'Unknown Course',
+        description: null,
+        category: null,
+        instructorId: null,
+        duration: null,
+        price: null,
+        isFree: null,
+        hasQuiz: null,
+        hasCertificate: null,
+        isFeatured: null,
+        isBestseller: null,
+        level: null,
+        thumbnailUrl: null,
+        rating: null,
+        enrollmentCount: null,
+        published: null,
+        publishedAt: null,
+        createdAt: null,
+        updatedAt: null,
+        instructor: {
+          id: 0,
+          userId: null,
+          name: 'Unknown Instructor',
+          bio: null,
+          email: null,
+          profileImage: null,
+          expertise: null,
+          createdAt: null,
+        },
+      },
+    }));
   }
 
   async getUserEnrollment(userId: string, courseId: number): Promise<Enrollment | undefined> {
@@ -803,20 +951,20 @@ export class DatabaseStorage implements IStorage {
     const [avgRating] = await db
       .select({ avg: sql<number>`avg(${reviews.rating})` })
       .from(reviews)
-      .where(eq(reviews.courseId, reviewData.courseId));
+      .where(eq(reviews.courseId, reviewData.courseId!));
 
     if (avgRating.avg) {
       await db
         .update(courses)
         .set({ rating: avgRating.avg.toFixed(2) })
-        .where(eq(courses.id, reviewData.courseId));
+        .where(eq(courses.id, reviewData.courseId!));
     }
 
     return review;
   }
 
   async getCourseReviews(courseId: number): Promise<(Review & { user: User })[]> {
-    return await db
+    const results = await db
       .select({
         id: reviews.id,
         userId: reviews.userId,
@@ -830,6 +978,7 @@ export class DatabaseStorage implements IStorage {
           firstName: users.firstName,
           lastName: users.lastName,
           profileImageUrl: users.profileImageUrl,
+          role: users.role,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         },
@@ -838,6 +987,25 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(users, eq(reviews.userId, users.id))
       .where(eq(reviews.courseId, courseId))
       .orderBy(desc(reviews.createdAt));
+
+    return results.map(row => ({
+      id: row.id,
+      userId: row.userId,
+      courseId: row.courseId,
+      rating: row.rating,
+      comment: row.comment,
+      createdAt: row.createdAt,
+      user: row.user || {
+        id: 'unknown',
+        email: null,
+        firstName: null,
+        lastName: null,
+        profileImageUrl: null,
+        role: null,
+        createdAt: null,
+        updatedAt: null,
+      },
+    }));
   }
 
   // Blog operations
