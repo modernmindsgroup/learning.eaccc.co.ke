@@ -71,11 +71,16 @@ export class PaystackService {
   async initializePayment(paymentData: PaymentData): Promise<PaymentResponse> {
     if (!paystackClient) {
       console.log("Paystack not configured - returning mock response for development");
+      // In development, create a local simulation URL that will auto-complete
+      const baseUrl = process.env.REPLIT_DOMAINS ? 
+        `https://${process.env.REPLIT_DOMAINS.split(',')[0]}` : 
+        'http://localhost:5000';
+      
       return {
         status: true,
         message: "Development mode - payment simulation",
         data: {
-          authorization_url: "https://checkout.paystack.com/dev-simulation",
+          authorization_url: `${baseUrl}/api/payments/dev-simulate?reference=${paymentData.reference}&email=${paymentData.email}&amount=${paymentData.amount}`,
           access_code: "dev-access-code",
           reference: paymentData.reference || "dev-ref-" + Date.now()
         }

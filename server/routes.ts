@@ -470,6 +470,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Development payment simulation route
+  app.get("/api/payments/dev-simulate", async (req, res) => {
+    const { reference, email, amount } = req.query;
+    
+    // Simple HTML page that auto-completes the payment simulation
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Development Payment Simulation</title>
+      <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #f5f5f5; }
+        .container { max-width: 400px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .success { color: #28a745; }
+        .amount { font-size: 24px; font-weight: bold; color: #0097D7; margin: 20px 0; }
+        button { background: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #218838; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h2>💳 Development Payment Simulation</h2>
+        <p>Email: <strong>${email}</strong></p>
+        <div class="amount">$${(parseInt(amount as string) / 100).toFixed(2)}</div>
+        <p>Reference: ${reference}</p>
+        <div class="success">
+          <h3>✅ Payment Successful!</h3>
+          <p>This is a development simulation.</p>
+        </div>
+        <button onclick="completePayment()">Complete Purchase</button>
+      </div>
+      <script>
+        function completePayment() {
+          // Simulate successful payment by calling the verification endpoint
+          fetch('/api/payments/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reference: '${reference}' })
+          }).then(() => {
+            alert('Payment completed successfully! Redirecting...');
+            window.location.href = '/courses';
+          }).catch(err => {
+            console.error('Payment completion error:', err);
+            alert('Payment simulation completed! Redirecting...');
+            window.location.href = '/courses';
+          });
+        }
+        
+        // Auto-complete after 3 seconds for convenience
+        setTimeout(() => {
+          completePayment();
+        }, 3000);
+      </script>
+    </body>
+    </html>`;
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  });
+
   // Admin routes (for demo purposes, these would normally require admin auth)
   
   // Create instructor
