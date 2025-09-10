@@ -18,6 +18,12 @@ import { z } from "zod";
 import { paystackService } from "./paystack";
 import { certificateGenerator } from "./certificates";
 
+// Helper function to get user ID - uses development user in development mode
+function getUserId(req: any): string {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  return isDevelopment ? '6779b0f3-5666-4ece-9eaa-80ad643078c4' : req.user.claims.sub;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static assets (course images and other attachments)
   app.use('/attached_assets', express.static('attached_assets'));
@@ -60,7 +66,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -246,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/courses/:id/enroll", isAuthenticated, async (req: any, res) => {
     try {
       const courseId = parseInt(req.params.id);
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
 
       // Check if user is already enrolled
       const existingEnrollment = await storage.getUserEnrollment(userId, courseId);
@@ -607,11 +614,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/payments/initialize", isAuthenticated, async (req: any, res) => {
     console.log("=== PAYMENT INITIALIZATION START ===");
     console.log("Request body:", req.body);
-    console.log("User ID:", req.user.claims.sub);
     
     try {
       const { courseId } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
+      console.log("User ID:", userId);
 
       if (!courseId) {
         console.log("ERROR: No courseId provided");
