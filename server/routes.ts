@@ -1276,7 +1276,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting course:", error);
       // Pass the specific error message from storage layer
-      res.status(400).json({ message: error.message || "Failed to delete course" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete course";
+      res.status(400).json({ message: errorMessage });
     }
   });
 
@@ -1311,7 +1312,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error publishing course:", error);
       res.setHeader('Content-Type', 'application/json');
-      res.status(500).json({ message: "Failed to publish course", error: error.message });
+      const errorMessage = error instanceof Error ? error.message : "Failed to publish course";
+      res.status(500).json({ message: "Failed to publish course", error: errorMessage });
     }
   });
 
